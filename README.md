@@ -1,5 +1,5 @@
 # Overview
-Project for Intro to Databases (CS-UY 3083) with Brian Guo. This project aims to simulate an online Air Ticket Reservation System. The system has 3 types of users - customers, booking agents, and airline staff. 
+Project for Intro to Databases (CS-UY 3083) by Brian Guo & Winston Yang. This project aims to simulate an online Air Ticket Reservation System. The system has 3 types of users - customers, booking agents, and airline staff. 
 
 ## Functional Requirements
 
