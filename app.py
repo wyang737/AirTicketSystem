@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, session, redirect, url_for, s
 import pymysql
 
 app = Flask(__name__)
-
+app.secret_key = "super secret key"
 mysql = pymysql.connect(host="localhost", user="root", password="", db="airplane", charset="utf8mb4", port=3306,
                         cursorclass=pymysql.cursors.DictCursor, autocommit=True)
 
@@ -32,12 +32,12 @@ def login():
     cursor = mysql.cursor()
     if request.method == "POST":
         # check the credentials here...
-        if not cursor.execute("SELECT * FROM customer WHERE customer_email = " + request.form['username'] +
-                          " AND password = " + request.form['password']):
+        if not cursor.execute("SELECT * FROM customer WHERE customer_email = \"" + request.form['username'] +
+                          "\" AND password = \"" + request.form['password'] + "\""):
             error = "Invalid username/password, please try again."
         else:
             session["username"] = request.form['username']
-            return redirect(url_for("home"))
+            return redirect(url_for("index"))
     return render_template("login.html")
 
 
