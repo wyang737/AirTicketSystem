@@ -30,8 +30,14 @@ def login():
 	return render_template("login.html")
 
 # registration for new users
-@app.route("/register", methods=["GET"])
+@app.route("/register", methods=["GET", "POST"])
 def register():
+	error = None
+	if request.method == "POST":
+		username = request.form['username']
+		password = request.form['password']
+		# if username & password are in the database, throw some kind of error
+		# otherwise, should add them as a tuple into the db
 	return render_template("register.html")
 
 if __name__ == "__main__":
