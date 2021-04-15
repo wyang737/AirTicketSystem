@@ -36,6 +36,9 @@ def register():
 	if request.method == "POST":
 		username = request.form['username']
 		password = request.form['password']
+		userType = request.form['userType']
+		info = [username, password, userType]
+		print (info)
 		# if username & password are in the database, throw some kind of error
 		# otherwise, should add them as a tuple into the db
 	return render_template("register.html")
