@@ -2,15 +2,15 @@
 {% block title %} Public Search {% endblock %}
 {% block content %}
 <body>
-    <h1>Hello, {{ username }}!</h1>
+    <h1>Public Search Info</h1>
     <div>
-        <ul>
-            <li><a href="/images">View Images</a></li>
-            <li><a href="/upload">Upload an Image</a></li>
-            <li><a href="/groups">View Groups</a></li>
-            <li><a href="/follow">Manage Follows</a></li>
-            <li><a href="/logout">Logout</a></li>
-        </ul>
+        <form action="/loginAuth" method="post">
+            <input type="text" name="username" placeholder="Source City" required/>
+            <br/>
+            <input type="password" name="password" placeholder="Password" required/>
+            <br/>
+            <input type="submit" value="Search">
+        </form>
     </div>
 </body>
 {% endblock %}
