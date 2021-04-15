@@ -1,10 +1,6 @@
 from flask import Flask, render_template, request
-from flask_mysqldb import MySQL
-from flask_bootstrap import Bootstrap
 
 app = Flask(__name__)
-
-bootstrap = Bootstrap(app)
 
 # main page
 @app.route("/")
