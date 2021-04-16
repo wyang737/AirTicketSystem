@@ -1,0 +1,74 @@
+{% extends "staffbase.html" %}
+{% block title %} agent {% endblock %}
+{% block content %}
+<body>
+	<h2> Add New Flight</h2>
+	<div>
+        <form action="" method="post">
+        	<label for="name"> Airline Name: </label>
+            <input type="text" name="airlineName" placeholder="United" required/>
+            <br/>
+            <label for="name"> Status: </label>
+            <input type="radio" name="status" value="ontime"> On Time
+            <input type="radio" name="status" value="delayed"> Delayed
+            <br/>
+            <label for="name"> Flight Number: </label>
+            <input type="text" name="flightNumber" placeholder="123456789" required/>
+            <br/>
+            <label for="name"> Departure Airport: </label>
+            <input type="text" name="depAirport" placeholder="EWR" required/>
+            <br/>
+            <label for="name"> Departure Date: </label>
+            <input type="date" name="depDate"  required/>
+            <br/>
+            <label for="name"> Departure Time: </label>
+            <input type="time" name="depTime" required/>
+            <br/>
+            <label for="name"> Arrival Airport: </label>
+            <input type="text" name="arrAirport" placeholder="PEK"  required/>
+            <br/>
+            <label for="name"> Arrival Date: </label>
+            <input type="date" name="arrDate" required/>
+            <br/>
+            <label for="name"> Arrival Time: </label>
+            <input type="time" name="arrTime" required/>
+            <br/>
+            <label for="name"> Base Price: </label>
+            <input type="text" name="basePrice" placeholder="250"  required/>
+            <br/>
+            <label for="name"> Airplane ID: </label>
+            <input type="text" name="airplaneID" placeholder="1234567890"  required/>
+            <br/>
+            <input type="submit" value="Add Flight">
+        </form>
+    </div>
+	<h2> Add New Airport</h2>
+	<div>
+        <form action="" method="post">
+        	<label for="name"> Airport Name: </label>
+            <input type="etext" name="airportName" placeholder="EWR" required/>
+            <br/>
+            <label for="name"> Airport City: </label>
+            <input type="text" name="city" placeholder="Newark" required/>
+            <br/>
+            <input type="submit" value="Add Airport">
+        </form>
+    </div>
+
+    <h2> Add New Airplane</h2>
+	<div>
+        <form action="" method="post">
+        	<label for="name"> Airplane ID: </label>
+            <input type="text" name="airplaneID" placeholder="1234567890" required/>
+            <br/>
+            <label for="name"> Number of Seats: </label>
+            <input type="text" name="numSeats" placeholder="1000" required/>
+            <br/>
+            <label for="name"> Airline Name: </label>
+            <input type="text" name="airlineName" placeholder="United" required/>
+            <br/>
+            <input type="submit" value="Add Airplane">
+        </form>
+    </div>
+</body>
+{% endblock %}
