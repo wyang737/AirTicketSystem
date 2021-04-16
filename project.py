@@ -1,16 +1,24 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session, send_file
+import pymysql
+from functools import wraps
 
 app = Flask(__name__)
+app.secret_key = "super secret key"
+mysql = pymysql.connect(host="localhost", user="root", password="", db="airticketsystem", 
+	charset="utf8mb4", port=3306, cursorclass=pymysql.cursors.DictCursor, autocommit=True)
+
+def login_required(f):
+	@wraps(f)
+	def dec(*args, **kwargs):
+		if not "username" in session:
+			return redirect(url_for("login"))
+		return f(*args, **kwargs)
+	return dec
 
 # main page
 @app.route("/")
 def index():
 	return render_template("index.html")
-
-# home page
-@app.route("/home")
-def home():
-	return render_template("home.html")
 
 # public searching page
 @app.route("/publicsearch")
@@ -21,12 +29,18 @@ def publicsearch():
 @app.route("/login", methods=["GET", "POST"])
 def login():
 	error = None
+	cursor = mysql.cursor()
 	if request.method == "POST":
 		# check the credentials here...
-		if request.form['username'] != 'root' or request.form['password'] != 'password':
+		query = "SELECT * FROM customer WHERE customer_email = \"" + request.form['username'] + "\" AND password = \"" + request.form['password'] + "\""
+		if not cursor.execute(query): # failed login
 			error = 'Invalid username/password, please try again.'
-		else:
-			# need to start a session? or something? idk
+		else: 						  # successful login
+			session["username"] = request.form['username']
+			# probably need to assign session['usertype'] = some query to get the usertype?
+			# if usertype = customer, redirect to customer page
+			# if staff, redirect to staff...
+			# if agent, redirect to agent
 			return redirect(url_for('index'))
 	return render_template("login.html", error=error)
 
@@ -46,18 +60,22 @@ def register():
 	return render_template("register.html", error=error)
 
 @app.route("/customer")
+@login_required
 def customer():
-	return render_template("customer.html")
+	return render_template("customer.html", name=session['username'])
 
 @app.route("/agent")
+@login_required
 def agent():
 	return render_template("agent.html")
 
 @app.route("/staff")
+@login_required
 def staff():
 	return render_template("staff.html")
 
 @app.route("/addstuff", methods=["GET", "POST"])
+@login_required
 def addstuff():
 	error = None
 	if request.method == "POST":
@@ -89,6 +107,7 @@ def addstuff():
 	return render_template("addstuff.html", error=error)
 
 @app.route("/changestatus", methods=["GET", "POST"])
+@login_required
 def changestatus():
 	error = None
 	if request.method == "POST":
