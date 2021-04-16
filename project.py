@@ -26,8 +26,9 @@ def login():
 		if request.form['username'] != 'root' or request.form['password'] != 'password':
 			error = 'Invalid username/password, please try again.'
 		else:
+			# need to start a session? or something? idk
 			return redirect(url_for('index'))
-	return render_template("login.html")
+	return render_template("login.html", error=error)
 
 # registration for new users
 @app.route("/register", methods=["GET", "POST"])
@@ -39,9 +40,10 @@ def register():
 		userType = request.form['userType'] # customer, agent, staff
 		info = [username, password, userType]
 		print (info)
-		# if username & password are in the database, throw some kind of error
+		# if the username already exists in the database,
+		# error = "Username already exists"
 		# otherwise, should add them as a tuple into the db
-	return render_template("register.html")
+	return render_template("register.html", error=error)
 
 @app.route("/customer")
 def customer():
@@ -63,7 +65,6 @@ def addstuff():
 		if len(request.form) == 2:   # it's a new airport
 			name = request.form['airportName']
 			city = request.form['city']
-
 			# need to add to db now..
 		elif len(request.form) == 3: # it's a new airplane
 			airplaneID = request.form['airplaneID']
@@ -83,10 +84,20 @@ def addstuff():
 			arrTime = request.form['arrTime']
 			price = request.form['basePrice']
 			airplaneID = request.form['airplaneID']
-
 			# need to add to db now..
 	print (request.form)
-	return render_template("addstuff.html")
+	return render_template("addstuff.html", error=error)
+
+@app.route("/changestatus", methods=["GET", "POST"])
+def changestatus():
+	error = None
+	if request.method == "POST":
+		flightNumber = request.form['flightNumber']
+		depDate = request.form['depDate'] # of the format 2021-04-22
+		depTime = request.form['depTime'] # of the format 00:00 - 23:59 
+		newStatus = request.form['status'] # ontime or delayed
+		# change the db now...
+	return render_template("changestatus.html")
 
 
 if __name__ == "__main__":
