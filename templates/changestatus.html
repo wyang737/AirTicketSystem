@@ -1,0 +1,25 @@
+{% extends "staffbase.html" %}
+{% block title %} agent {% endblock %}
+{% block content %}
+<body>
+	<h2> Change Flight Status</h2>
+	<div>
+		<form method="post">
+			<label for="name"> Flight Number: </label>
+			<input type="text" name="flightNumber" required="" placeholder = "123456789"/>
+			<br/>
+			<label for="name"> Departure Date: </label>
+            <input type="date" name="depDate"  required/>
+            <br/>
+            <label for="name"> Departure Time: </label>
+            <input type="time" name="depTime" required/>
+            <br/>
+            <label for="name"> New Status: </label>
+            <input type="radio" name="status" value="ontime"> On Time
+            <input type="radio" name="status" value="delayed"> Delayed
+            <br/>
+            <input type="submit" value="Change Status">
+		</form>
+	</div>
+</body>
+{% endblock %}
