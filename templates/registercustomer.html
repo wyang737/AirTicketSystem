@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %} Customer Registration {% endblock %}
+{% block content %}
+<body>
+    <h1>Customer Registration</h1>
+    <div>
+        <form action="" method="post">
+            <label for="name"> Name: </label>
+            <input type="text" name="name" placeholder="John Smith" required/>
+            <br/>
+            <label for="name"> Email: </label>
+            <input type="text" name="email" placeholder="john.smith@gmail.com" required/>
+            <br/>
+            <label for="name"> Password: </label>
+            <input type="text" name="password" placeholder="secretpassword" required/>
+            <br/>
+            <label for="name"> Building Number: </label>
+            <input type="text" name="buildingNumber" placeholder="143" required/>
+            <br/>
+            <label for="name"> Street: </label>
+            <input type="text" name="street" placeholder="Main St."  required/>
+            <br/>
+            <label for="name"> City: </label>
+            <input type="text" name="city" placeholder="New York City" required/>
+            <br/>
+            <label for="name"> State: </label>
+            <input type="text" name="state" placeholder="New York"  required/>
+            <br/>
+            <label for="name"> Phone Number: </label>
+            <input type="text" name="phoneNumber" placeholder="8743784823" required/>
+            <br/>
+            <label for="name"> Passport Number: </label>
+            <input type="text" name="passportNumber" placeholder="123456789" required/>
+            <br/>
+            <label for="name"> Passport Expiration Date: </label>
+            <input type="date" name="expDate" required/>
+            <br/>
+            <label for="name"> Passport Country: </label>
+            <input type="text" name="passportCountry" placeholder="United States" required/>
+            <br/>
+            <label> Date of Birth: </label>
+            <input type="date" name="dateOfBirth" required>
+            <br/>
+            <input type="submit" value="Register">
+        </form>
+    </div>
+    {% if error %}
+        {{ error }}
+    {% endif %}
+</body>
+{% endblock %}

@@ -5,9 +5,11 @@
     <h1>Login</h1>
     <div>
         <form action="" method="post">
-            <input type="text" name="username" placeholder="Username" value = "{{request.form.username}}" required/>
+            <label> Username: </label>
+            <input type="text" name="username" required/>
             <br/>
-            <input type="password" name="password" placeholder="Password" value = "{{request.form.password}}" required/>
+            <label> Password: </label>
+            <input type="password" name="password" required/>
             <br/>
             <input type="submit" value="Login">
         </form>

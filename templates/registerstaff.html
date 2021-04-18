@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %} Airline Staff Registration {% endblock %}
+{% block content %}
+<body>
+    <h1>Airline Staff Registration</h1>
+    <div>
+        <form action="" method="post">
+            <label for="name"> Name: </label>
+            <input type="text" name="name" placeholder="John Smith" required/>
+            <br/>
+            <label for="name"> Email: </label>
+            <input type="text" name="email" placeholder="john.smith@gmail.com" required/>
+            <br/>
+            <label for="name"> Password: </label>
+            <input type="text" name="password" placeholder="secretpassword" required/>
+            <br/>
+            <label for="name"> Airline Name: </label>
+            <input type="text" name="airlineName" placeholder="United" required/>
+            <br/>
+            <label> Date of Birth: </label>
+            <input type="date" name="dateOfBirth" required>
+            <br/>
+            <label> Phone Number(s): </label>
+            <input type="text" name="phoneNumber" placeholder= "1111111111, 2222222222"required>
+            <br/>
+            <input type="submit" value="Register">
+        </form>
+    </div>
+    {% if error %}
+        {{ error }}
+    {% endif %}
+</body>
+{% endblock %}

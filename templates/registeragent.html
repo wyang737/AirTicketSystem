@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %} Booking Agent Registration {% endblock %}
+{% block content %}
+<body>
+    <h1>Booking Agent Registration</h1>
+    <div>
+        <form action="" method="post">
+            <label for="name"> Email: </label>
+            <input type="text" name="email" placeholder="john.smith@gmail.com" required/>
+            <br/>
+            <label for="name"> Password: </label>
+            <input type="text" name="password" placeholder="secretpassword" required/>
+            <br/>
+            <label for="name"> ID: </label>
+            <input type="text" name="agentID" placeholder="12345" required/>
+            <br/>
+            <input type="submit" value="Register">
+        </form>
+    </div>
+    {% if error %}
+        {{ error }}
+    {% endif %}
+</body>
+{% endblock %}
