@@ -32,32 +32,77 @@ def login():
 	cursor = mysql.cursor()
 	if request.method == "POST":
 		# check the credentials here...
-		query = "SELECT * FROM customer WHERE customer_email = \"" + request.form['username'] + "\" AND password = \"" + request.form['password'] + "\""
-		if not cursor.execute(query): # failed login
-			error = 'Invalid username/password, please try again.'
-		else: 						  # successful login
+		customerQuery = "SELECT * FROM customer WHERE customer_email = \"" + request.form['username'] + "\" AND password = \"" + request.form['password'] + "\""
+		staffQuery = "SELECT * FROM staff WHERE username = \"" + request.form['username'] + "\" AND password = \"" + request.form['password'] + "\""
+		agentQuery = "SELECT * FROM BookingAgent WHERE booking_agent_email = \"" + request.form['username'] + "\" AND password = \"" + request.form['password'] + "\""
+		if cursor.execute(customerQuery): # successful customer login
 			session["username"] = request.form['username']
-			# probably need to assign session['usertype'] = some query to get the usertype?
-			# if usertype = customer, redirect to customer page
-			# if staff, redirect to staff...
-			# if agent, redirect to agent
-			return redirect(url_for('index'))
+			session["userType"] = "customer"
+			return redirect(url_for('customer'))
+		elif cursor.execute(staffQuery): # successful staff login
+			session["username"] = request.form['username']
+			session["userType"] = "staff"
+			return redirect(url_for('staff'))
+		elif cursor.execute(agentQuery): # successful agent login
+			session["username"] = request.form['username']
+			session["userType"] = "agent"
+			return redirect(url_for('agent'))
+		else: # failed login
+			error = "Invalid username/password, please try again."
 	return render_template("login.html", error=error)
 
+# logout page
+@app.route("/logout", methods=["GET"])
+def logout():
+    session.pop("username")
+    return redirect("/")
+    
 # registration for new users
 @app.route("/register", methods=["GET", "POST"])
 def register():
 	error = None
 	if request.method == "POST":
-		username = request.form['username']
-		password = request.form['password']
 		userType = request.form['userType'] # customer, agent, staff
-		info = [username, password, userType]
-		print (info)
-		# if the username already exists in the database,
-		# error = "Username already exists"
-		# otherwise, should add them as a tuple into the db
+		if userType == "customer":
+			return redirect(url_for('registercustomer'))
+		elif userType == "agent":
+			return redirect(url_for('registeragent'))
+		elif userType == "staff":
+			return redirect(url_for('registerstaff'))
 	return render_template("register.html", error=error)
+
+# registration for customers
+@app.route("/registercustomer", methods=["GET", "POST"])
+def registercustomer():
+	error = None
+	if request.method == "POST":
+		# parse the data...
+		# if the email already exists in the db, throw an error
+		# if the registration is good, redirect to login page
+		return redirect(url_for('login'))
+	return render_template("registercustomer.html", error=error)
+
+# registration for booking agents
+@app.route("/registeragent", methods=["GET", "POST"])
+def registeragent():
+	error = None
+	if request.method == "POST":
+		# parse the data...
+		# if the email already exists in the db, throw an error
+		# if the registration is good, redirect to login page
+		return redirect(url_for('login'))
+	return render_template("registeragent.html", error=error)
+
+# registration for airline staff
+@app.route("/registerstaff", methods=["GET", "POST"])
+def registerstaff():
+	error = None
+	if request.method == "POST":
+		# parse the data...
+		# if the email already exists in the db, throw an error
+		# if the registration is good, redirect to login page
+		return redirect(url_for('login'))
+	return render_template("registerstaff.html", error=error)
 
 @app.route("/customer")
 @login_required
@@ -85,7 +130,7 @@ def addstuff():
 			city = request.form['city']
 			# need to add to db now..
 		elif len(request.form) == 3: # it's a new airplane
-			airplaneID = request.form['airplaneID']
+			airplaneId = request.form['airplaneID']
 			numSeats = request.form['numSeats']
 			name = request.form['airlineName']
 
