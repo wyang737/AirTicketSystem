@@ -7,11 +7,45 @@ app.secret_key = "super secret key"
 mysql = pymysql.connect(host="localhost", user="root", password="", db="airticketsystem", 
 	charset="utf8mb4", port=3306, cursorclass=pymysql.cursors.DictCursor, autocommit=True)
 
-def login_required(f):
+def customer_login_required(f):
 	@wraps(f)
 	def dec(*args, **kwargs):
-		if not "username" in session:
+		if not "username" in session: # if they're not logged in, make them login
 			return redirect(url_for("login"))
+		elif session["userType"] != "customer":
+			userType = session["userType"]
+			if userType == "agent":
+				return redirect(url_for("agent"))
+			elif userType == "staff":
+				return redirect(url_for("staff"))
+		return f(*args, **kwargs)
+	return dec
+
+def agent_login_required(f):
+	@wraps(f)
+	def dec(*args, **kwargs):
+		if not "username" in session: # if they're not logged in, make them login
+			return redirect(url_for("login"))
+		elif session["userType"] != "agent":
+			userType = session["userType"]
+			if userType == "customer":
+				return redirect(url_for("customer"))
+			elif userType == "staff":
+				return redirect(url_for("staff"))
+		return f(*args, **kwargs)
+	return dec
+
+def staff_login_required(f):
+	@wraps(f)
+	def dec(*args, **kwargs):
+		if not "username" in session: # if they're not logged in, make them login
+			return redirect(url_for("login"))
+		elif session["userType"] != "staff":
+			userType = session["userType"]
+			if userType == "customer":
+				return redirect(url_for("customer"))
+			elif userType == "agent":
+				return redirect(url_for("agent"))
 		return f(*args, **kwargs)
 	return dec
 
@@ -21,7 +55,7 @@ def index():
 	return render_template("index.html")
 
 # public searching page
-@app.route("/publicsearch")
+@app.route("/publicsearch", methods=["GET", "POST"])
 def publicsearch():
 	return render_template("publicsearch.html")
 
@@ -56,7 +90,7 @@ def login():
 def logout():
     session.pop("username")
     return redirect("/")
-    
+
 # registration for new users
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -105,22 +139,22 @@ def registerstaff():
 	return render_template("registerstaff.html", error=error)
 
 @app.route("/customer")
-@login_required
+@customer_login_required
 def customer():
 	return render_template("customer.html", name=session['username'])
 
 @app.route("/agent")
-@login_required
+@agent_login_required
 def agent():
-	return render_template("agent.html")
+	return render_template("agent.html", name=session['username'])
 
 @app.route("/staff")
-@login_required
+@staff_login_required
 def staff():
-	return render_template("staff.html")
+	return render_template("staff.html", name=session['username'])
 
 @app.route("/addstuff", methods=["GET", "POST"])
-@login_required
+@staff_login_required
 def addstuff():
 	error = None
 	if request.method == "POST":
@@ -152,7 +186,7 @@ def addstuff():
 	return render_template("addstuff.html", error=error)
 
 @app.route("/changestatus", methods=["GET", "POST"])
-@login_required
+@staff_login_required
 def changestatus():
 	error = None
 	if request.method == "POST":
