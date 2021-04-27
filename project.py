@@ -57,7 +57,26 @@ def index():
 # public searching page
 @app.route("/publicsearch", methods=["GET", "POST"])
 def publicsearch():
-	return render_template("publicsearch.html")
+    cursor = mysql.cursor()
+    if request.method == "POST":
+        if request.form.get("SearchAirport"):
+            query = "SELECT * FROM `flight` WHERE departure_airport = \"" + request.form['depAirport'] + \
+                    "\" AND arrival_airport = \"" + request.form['arrAirport'] + "\"AND departure_date = \"" + \
+                    request.form['depDate'] + "\""
+        if request.form.get("SearchStatus"):
+            query = "SELECT * FROM `flight` WHERE airline_name = \"" + request.form['airlineName'] + \
+                    "\" AND flight_number = \"" + request.form['flightNumber'] + "\"AND departure_date = \"" + \
+                    request.form['depDate'] + "\"" + "\"AND arrival_date = \"" + request.form['arrDate'] + "\""
+    if not "username" in session:
+    	return render_template("publicsearch.html")
+    userType = session["userType"]
+    if userType == "customer":
+    	return render_template("customerps.html")
+    elif userType == "agent":
+    	return render_template("agentps.html")
+    elif userType == "staff":
+    	return render_template("staffps.html")
+    return render_template("publicsearch.html")
 
 #login page
 @app.route("/login", methods=["GET", "POST"])
@@ -89,7 +108,7 @@ def login():
 @app.route("/logout", methods=["GET"])
 def logout():
     session.pop("username")
-    return redirect("/")
+    return redirect("/login")
 
 # registration for new users
 @app.route("/register", methods=["GET", "POST"])
@@ -110,10 +129,17 @@ def register():
 def registercustomer():
 	error = None
 	if request.method == "POST":
-		# parse the data...
-		# if the email already exists in the db, throw an error
-		# if the registration is good, redirect to login page
-		return redirect(url_for('login'))
+		cursor = mysql.cursor()
+		query = "Select * from customer where customer_email = \"" + request.form['email'] + '\"'
+		if cursor.execute(query): # if the email already exists in the db,
+			error = "Email already exists, please try a different email."
+			return render_template("registercustomer.html", error=error)
+		query = f'''INSERT INTO customer VALUES (\'{request.form['name']}\', \'{request.form['email']}\', 
+		\'{request.form['password']}\', {request.form['buildingNumber']}, \'{request.form['street']}\', 
+		\'{request.form['city']}\', \'{request.form['state']}\', {request.form['phoneNumber']}, {request.form['passportNumber']},
+		\'{request.form['expDate']}\', \'{request.form['passportCountry']}\', \'{request.form['dateOfBirth']}\')'''
+		if cursor.execute(query): # successful registration
+			return redirect(url_for('login'))
 	return render_template("registercustomer.html", error=error)
 
 # registration for booking agents
@@ -121,10 +147,15 @@ def registercustomer():
 def registeragent():
 	error = None
 	if request.method == "POST":
-		# parse the data...
-		# if the email already exists in the db, throw an error
-		# if the registration is good, redirect to login page
-		return redirect(url_for('login'))
+		cursor = mysql.cursor()
+		query = "Select * from BookingAgent where booking_agent_email = \"" + request.form['email'] + '\"'
+		if cursor.execute(query): # if the email already exists in the db,
+			error = "Email already exists, please try a different email."
+			return render_template("registeragent.html", error=error)
+		query = f'''INSERT INTO BookingAgent VALUES (\'{request.form['email']}\', 
+		\'{request.form['password']}\', {request.form['agentID']}, 0)'''
+		if cursor.execute(query): # successful registration
+			return redirect(url_for('login'))
 	return render_template("registeragent.html", error=error)
 
 # registration for airline staff
@@ -132,26 +163,78 @@ def registeragent():
 def registerstaff():
 	error = None
 	if request.method == "POST":
-		# parse the data...
-		# if the email already exists in the db, throw an error
-		# if the registration is good, redirect to login page
-		return redirect(url_for('login'))
+		cursor = mysql.cursor()
+		query = "Select * from staff where username = \"" + request.form['email'] + '\"'
+		if cursor.execute(query): # if the email already exists in the db,
+			error = "Email already exists, please try a different email."
+			return render_template("registercustomer.html", error=error)
+		# need to parse phone numbers
+		numbers = request.form['phoneNumber'].split(", ")
+		for num in numbers:
+			query = f'''insert into staffphones values (\'{request.form['email']}\', {num})'''
+			cursor.execute(query)
+		query = f'''INSERT INTO staff VALUES (\'{request.form['email']}\', \'{request.form['password']}\', 
+		\'{request.form['name']}\', \'{request.form['dateOfBirth']}\', \'{numbers[0]}\', 
+		\'{request.form['airlineName']}\')'''
+		if cursor.execute(query): # successful registration
+			return redirect(url_for('login'))
 	return render_template("registerstaff.html", error=error)
 
 @app.route("/customer")
 @customer_login_required
 def customer():
-	return render_template("customer.html", name=session['username'])
+	cursor = mysql.cursor()
+	query = "Select name from customer where customer_email = \"" + session['username'] + "\""
+	cursor.execute(query)
+	name = cursor.fetchone()['name']
+	return render_template("customer.html", name=name)
+
+@app.route("/customerflights")
+@customer_login_required
+def customerflights():
+	info = []
+	flight_info = ['China Eastern', 'Delayed', 123456789, 'JFK', '2021-03-30', '12:30:12', 'PVG', '2021-03-31', '08:30:59', 500, 1234567890]
+	info.append(flight_info)
+	flight_info = ['United', 'On Time', 445566778, 'JFK', '2021-03-30', '11:33:22', 'PVG', '2021-03-31', '12:55:11', 345, 98989898]
+	info.append(flight_info)
+	# info should be a list of lists, where each inner list is a flight.
+	return render_template("customerflights.html", info = info)
 
 @app.route("/agent")
 @agent_login_required
 def agent():
 	return render_template("agent.html", name=session['username'])
 
+@app.route("/agentflights")
+@agent_login_required
+def agentflights():
+	info = []
+	flight_info = ['China Eastern', 'Delayed', 123456789, 'JFK', '2021-03-30', '12:30:12', 'PVG', '2021-03-31', '08:30:59', 500, 1234567890]
+	info.append(flight_info)
+	flight_info = ['United', 'On Time', 445566778, 'JFK', '2021-03-30', '11:33:22', 'PVG', '2021-03-31', '12:55:11', 345, 98989898]
+	info.append(flight_info)
+	# info should be a list of lists, where each inner list is a flight.
+	return render_template("agentflights.html", info = info)
+
 @app.route("/staff")
 @staff_login_required
 def staff():
-	return render_template("staff.html", name=session['username'])
+	cursor = mysql.cursor()
+	query = "Select name from staff where username = \"" + session['username'] + "\""
+	cursor.execute(query)
+	name = cursor.fetchone()['name']
+	return render_template("staff.html", name=name)
+
+@app.route("/staffflights")
+@agent_login_required
+def staffflights():
+	info = []
+	flight_info = ['China Eastern', 'Delayed', 123456789, 'JFK', '2021-03-30', '12:30:12', 'PVG', '2021-03-31', '08:30:59', 500, 1234567890]
+	info.append(flight_info)
+	flight_info = ['United', 'On Time', 445566778, 'JFK', '2021-03-30', '11:33:22', 'PVG', '2021-03-31', '12:55:11', 345, 98989898]
+	info.append(flight_info)
+	# info should be a list of lists, where each inner list is a flight.
+	return render_template("staffflights.html", info = info)
 
 @app.route("/addstuff", methods=["GET", "POST"])
 @staff_login_required
