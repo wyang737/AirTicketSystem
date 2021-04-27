@@ -211,9 +211,38 @@ def customerpurchase():
 	if request.method == "POST":
 		form = request.form.to_dict()
 		items = list(form.items())[0][0].split(", ") # so ugly but it works
-		for elem in items:
-			print(elem)
 	return render_template("customerpurchase.html", info = info)
+
+#rating and commenting
+@app.route("/rate", methods = ["GET", "POST"])
+@customer_login_required
+def rate():
+	error = None
+	info = []
+	flight_info = ['China Eastern', 'Delayed', 123456789, 'JFK', '2021-03-30', '12:30:12', 'PVG', '2021-03-31', '08:30:59', 500, 1234567890, 0]
+	info.append(flight_info)
+	flight_info = ['United', 'On Time', 445566778, 'JFK', '2021-03-30', '11:33:22', 'PVG', '2021-03-31', '12:55:11', 345, 98989898, 1]
+	info.append(flight_info)
+	if request.method == "POST":
+		form = request.form.to_dict()
+		print(form)
+		comment = form['comment']
+		rating = form['rating']
+		flightNumber = list(form)[2]
+		customer_email = session['username']
+
+		# first need to check if the customer already rated this flight
+		cursor = mysql.cursor()
+		query = f'''select customer_email, flight_number from rates where 
+		customer_email = \'{customer_email}\' and flight_number = {flightNumber}'''
+		if cursor.execute(query):
+			error = "You already rated this flight!"
+		else:
+			query = f'''insert into rates values(\"{customer_email}\", {flightNumber}, \"{comment}\", {rating})'''
+			cursor.execute(query)
+			error = "Rate & Comment were Succesful!"
+			return redirect(url_for('rate'))
+	return render_template("rate.html", info = info, error = error)
 
 @app.route("/agent")
 @agent_login_required
@@ -241,7 +270,7 @@ def staff():
 	return render_template("staff.html", name=name)
 
 @app.route("/staffflights")
-@agent_login_required
+@staff_login_required
 def staffflights():
 	info = []
 	flight_info = ['China Eastern', 'Delayed', 123456789, 'JFK', '2021-03-30', '12:30:12', 'PVG', '2021-03-31', '08:30:59', 500, 1234567890]
@@ -280,7 +309,6 @@ def addstuff():
 			price = request.form['basePrice']
 			airplaneID = request.form['airplaneID']
 			# need to add to db now..
-	print (request.form)
 	return render_template("addstuff.html", error=error)
 
 @app.route("/changestatus", methods=["GET", "POST"])
