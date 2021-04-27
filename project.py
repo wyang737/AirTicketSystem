@@ -243,10 +243,12 @@ def staff():
 @app.route("/staffflights")
 @agent_login_required
 def staffflights():
+	cursor = mysql.cursor()
+	query = "Select airline_name from staff where username = \"" + session['username'] + "\""
+	airline_name = cursor.execute(query)
+	query = "Select * from flight where airline_name = \"" + airline_name + "\""
 	info = []
-	flight_info = ['China Eastern', 'Delayed', 123456789, 'JFK', '2021-03-30', '12:30:12', 'PVG', '2021-03-31', '08:30:59', 500, 1234567890]
-	info.append(flight_info)
-	flight_info = ['United', 'On Time', 445566778, 'JFK', '2021-03-30', '11:33:22', 'PVG', '2021-03-31', '12:55:11', 345, 98989898]
+	flight_info = cursor.execute(query)
 	info.append(flight_info)
 	# info should be a list of lists, where each inner list is a flight.
 	return render_template("staffflights.html", info = info)
