@@ -21,3 +21,5 @@ INSERT INTO purchases VALUES (12345678, 'wy882@nyu.edu', null, 500, '2021-03-27'
 INSERT INTO purchases VALUES (87654321, 'wy882@nyu.edu', null, 420, '2021-03-27', '10:30:15', 'credit',1122334455667788, 'Winston Yang', '2023-12-10');
 INSERT INTO purchases VALUES (11223344, 'greg.aloupis@nyu.edu', null, 345, '2021-03-30', '09:15:24', 'credit',8877665544332211, 'Greg Aloupis', '2021-12-10');
 INSERT INTO purchases VALUES (44332211, 'greg.aloupis@nyu.edu', 12345, 651.6, '2021-03-30', '08:11:12', 'credit',8877665544332211, 'Greg Aloupis', '2021-12-10');
+INSERT INTO staffphones VALUES ('johnsmith', 9998887777);
+INSERT INTO staffphones VALUES ('johnsmith', 2223334444);
