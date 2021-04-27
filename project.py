@@ -200,6 +200,21 @@ def customerflights():
 	# info should be a list of lists, where each inner list is a flight.
 	return render_template("customerflights.html", info = info)
 
+@app.route("/customerpurchase", methods = ["POST", "GET"])
+@customer_login_required
+def customerpurchase():
+	info = []
+	flight_info = ['China Eastern', 'Delayed', 123456789, 'JFK', '2021-03-30', '12:30:12', 'PVG', '2021-03-31', '08:30:59', 500, 1234567890, 0]
+	info.append(flight_info)
+	flight_info = ['United', 'On Time', 445566778, 'JFK', '2021-03-30', '11:33:22', 'PVG', '2021-03-31', '12:55:11', 345, 98989898, 1]
+	info.append(flight_info)
+	if request.method == "POST":
+		form = request.form.to_dict()
+		items = list(form.items())[0][0].split(", ") # so ugly but it works
+		for elem in items:
+			print(elem)
+	return render_template("customerpurchase.html", info = info)
+
 @app.route("/agent")
 @agent_login_required
 def agent():
