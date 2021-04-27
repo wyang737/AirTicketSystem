@@ -117,8 +117,7 @@ CREATE TABLE Staff
 (
 	username varchar(20) not null unique,
 	password varchar(20),
-	first_name varchar(15),
-	last_name varchar(15),
+	name varchar(30),
 	date_of_birth date,
 	phone_number numeric(10, 0),
 	airline_name varchar(20),
