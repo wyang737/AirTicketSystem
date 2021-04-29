@@ -310,13 +310,27 @@ def staffflights():
 	query = "Select airline_name from staff where username = \"" + session['username'] + "\""
 	cursor.execute(query)
 	airline_name = cursor.fetchone().get("airline_name")
-	print(airline_name)
 	query = "Select * from flight where airline_name = \"" + airline_name + "\""
-	print(cursor.execute(query))
+	cursor.execute(query)
 	info = cursor.fetchall()
-	print(type(info[0]))
+	customers = []
+	query = f"Select flight_number from flight where airline_name = \'{airline_name}\'"
+	cursor.execute(query)
+	flightNumbers = cursor.fetchall()
+	for num in flightNumbers:
+		num = num.get("flight_number")
+		query = f'''SELECT customer.name
+		from ticket NATURAL JOIN purchases NATURAL JOIN customer
+		where ticket.flight_number = {num}'''
+		cursor.execute(query)
+		names = cursor.fetchall()
+		name_list = []
+		for name in names:
+			name = name.get("name")
+			name_list.append(name)
+		customers.append(name_list)
 	# info should be a list of lists, where each inner list is a flight.
-	return render_template("staffflights.html", info= info)
+	return render_template("staffflights.html", info=info, customers=customers)
 
 @app.route("/addstuff", methods=["GET", "POST"])
 @staff_login_required
