@@ -245,7 +245,7 @@ def rate():
 	return render_template("rate.html", info = info, error = error)
 
 @app.route("/agent")
-@agent_login_required
+@staff_login_required
 def agent():
 	return render_template("agent.html", name=session['username'])
 
@@ -274,14 +274,19 @@ def staff():
 def staffflights():
 	cursor = mysql.cursor()
 	query = "Select airline_name from staff where username = \"" + session['username'] + "\""
-	airline_name = cursor.execute(query)
+	cursor.execute(query)
+	airline_name = cursor.fetchone().get("airline_name")
+	print(airline_name)
 	query = "Select * from flight where airline_name = \"" + airline_name + "\""
+	print(query)
 	info = []
-	flight_info = cursor.execute(query)
+	print(cursor.execute(query))
+	flight_info = cursor.fetchall()
+	print(flight_info)
 	info.append(flight_info)
+	print(type(info[0]))
 	# info should be a list of lists, where each inner list is a flight.
-	return render_template("staffflights.html", info = info)
-
+	return render_template("staffflights.html", info=info)
 @app.route("/addstuff", methods=["GET", "POST"])
 @staff_login_required
 def addstuff():
