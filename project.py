@@ -260,18 +260,37 @@ def rate():
 	return render_template("rate.html", info = info, error = error)
 
 @app.route("/agent")
-@staff_login_required
+@agent_login_required
 def agent():
 	return render_template("agent.html", name=session['username'])
 
 @app.route("/agentflights")
 @agent_login_required
 def agentflights():
-	info = []
-	flight_info = ['China Eastern', 'Delayed', 123456789, 'JFK', '2021-03-30', '12:30:12', 'PVG', '2021-03-31', '08:30:59', 500, 1234567890]
-	info.append(flight_info)
-	flight_info = ['United', 'On Time', 445566778, 'JFK', '2021-03-30', '11:33:22', 'PVG', '2021-03-31', '12:55:11', 345, 98989898]
-	info.append(flight_info)
+	cursor = mysql.cursor()
+	query = "Select booking_agent_id from bookingagent where booking_agent_email = \"" + session['username'] + "\""
+	cursor.execute(query)
+	bookingID = cursor.fetchall()
+	query = "Select ticket_id from purchases where booking_agent_id = " + str(bookingID[0].get('booking_agent_id'))
+	cursor.execute(query)
+	ticket_ids = cursor.fetchall()
+	print(ticket_ids)
+	query = "Select flight_number from ticket where ticket_id = "
+	for item in ticket_ids:
+		query += str(item.get('ticket_id'))
+		query += " or ticket_id = "
+	query += " -1 "
+	print(query)
+	cursor.execute(query)
+	flight_numbers = cursor.fetchall()
+	query = "Select * from flight where flight_number = "
+	for item in flight_numbers:
+		query += str(item.get('flight_number'))
+		query += " or flight_number = "
+	query += " -1 "
+	cursor.execute(query)
+	info = cursor.fetchall()
+
 	# info should be a list of lists, where each inner list is a flight.
 	return render_template("agentflights.html", info = info)
 

@@ -29,19 +29,19 @@ td, th {
     <th>Airplane ID</th>
   </tr>
   {% if info %}
-  {% for flight in info %}
+  {% for item in info %}
   	<tr>
-  		<td> {{flight[0]}} </td>
-  		<td> {{flight[1]}} </td>
-  		<td> {{flight[2]}} </td>
-  		<td> {{flight[3]}} </td>
-  		<td> {{flight[4]}} </td>
-  		<td> {{flight[5]}} </td>
-  		<td> {{flight[6]}} </td>
-  		<td> {{flight[7]}} </td>
-  		<td> {{flight[8]}} </td>
-  		<td> {{flight[9]}} </td>
-  		<td> {{flight[10]}} </td>
+  		<td> {{item.airline_name}} </td>
+        <td>    {{item.status}} </td>
+        <td>    {{item.flight_number}} </td>
+        <td>    {{item.departure_airport}}</td>
+        <td>    {{item.departure_date}}</td>
+        <td>    {{item.departure_time}}</td>
+        <td>    {{item.arrival_airport}}</td>
+        <td>    {{item.arrival_date}}</td>
+        <td>    {{item.arrival_time}}</td>
+        <td>    {{item.base_price}}</td>
+        <td>    {{item.airplane_id}} </td>
   	</tr>
   {% endfor %}
   {% endif %}
