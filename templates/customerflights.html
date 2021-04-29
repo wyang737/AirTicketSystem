@@ -30,8 +30,8 @@ td, th {
   </tr>
   {% if info %}
   {% for item in info %}
-  	<tr>
-  		<td> {{item.airline_name}} </td>
+    <tr>
+      <td> {{item.airline_name}} </td>
         <td>    {{item.status}} </td>
         <td>    {{item.flight_number}} </td>
         <td>    {{item.departure_airport}}</td>
@@ -42,7 +42,7 @@ td, th {
         <td>    {{item.arrival_time}}</td>
         <td>    {{item.base_price}}</td>
         <td>    {{item.airplane_id}} </td>
-  	</tr>
+    </tr>
   {% endfor %}
   {% endif %}
 </table>
