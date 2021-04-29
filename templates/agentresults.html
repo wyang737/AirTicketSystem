@@ -1,0 +1,50 @@
+{% extends "agentbase.html" %}
+{% block title %} View My Flights {% endblock %}
+{% block content %}
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+</style>
+<table>
+  <tr>
+    <th>Airline Name</th>
+    <th>Status</th>
+    <th>Flight Number</th>
+    <th>Departure Airport</th>
+    <th>Departure Date</th>
+    <th>Departure Time</th>
+    <th>Arrival Airport</th>
+    <th>Arrival Date</th>
+    <th>Arrival Time</th>
+    <th>Base Price</th>
+    <th>Airplane ID</th>
+  </tr>
+  {% if info %}
+  {% for item in info %}
+    <tr>
+      <td> {{item.airline_name}} </td>
+        <td>    {{item.status}} </td>
+        <td>    {{item.flight_number}} </td>
+        <td>    {{item.departure_airport}}</td>
+        <td>    {{item.departure_date}}</td>
+        <td>    {{item.departure_time}}</td>
+        <td>    {{item.arrival_airport}}</td>
+        <td>    {{item.arrival_date}}</td>
+        <td>    {{item.arrival_time}}</td>
+        <td>    {{item.base_price}}</td>
+        <td>    {{item.airplane_id}} </td>
+    </tr>
+  {% endfor %}
+  {% endif %}
+</table>
+
+{% endblock %}
