@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, session, send_file
 import pymysql
 from functools import wraps
+import ast
 
 app = Flask(__name__)
 app.secret_key = "super secret key"
-mysql = pymysql.connect(host="localhost", user="root", password="", db="airticketsystem", 
+mysql = pymysql.connect(host="localhost", user="root", password="", db="airticketsystem",
 	charset="utf8mb4", port=3306, cursorclass=pymysql.cursors.DictCursor, autocommit=True)
 
 def customer_login_required(f):
@@ -57,26 +58,55 @@ def index():
 # public searching page
 @app.route("/publicsearch", methods=["GET", "POST"])
 def publicsearch():
-    cursor = mysql.cursor()
-    if request.method == "POST":
-        if request.form.get("SearchAirport"):
-            query = "SELECT * FROM `flight` WHERE departure_airport = \"" + request.form['depAirport'] + \
-                    "\" AND arrival_airport = \"" + request.form['arrAirport'] + "\"AND departure_date = \"" + \
-                    request.form['depDate'] + "\""
-        if request.form.get("SearchStatus"):
-            query = "SELECT * FROM `flight` WHERE airline_name = \"" + request.form['airlineName'] + \
-                    "\" AND flight_number = \"" + request.form['flightNumber'] + "\"AND departure_date = \"" + \
-                    request.form['depDate'] + "\"" + "\"AND arrival_date = \"" + request.form['arrDate'] + "\""
-    if not "username" in session:
-    	return render_template("publicsearch.html")
-    userType = session["userType"]
-    if userType == "customer":
-    	return render_template("customerps.html")
-    elif userType == "agent":
-    	return render_template("agentps.html")
-    elif userType == "staff":
-    	return render_template("staffps.html")
-    return render_template("publicsearch.html")
+	cursor = mysql.cursor()
+	query = ""
+	info = []
+	if request.method == "POST":
+		if request.form.get("SearchCity"):
+			query = "SELECT airport_name FROM airport WHERE city = \"" + request.form['depCity'] + "\""
+			cursor.execute(query)
+			dep_airport_names = cursor.fetchall()
+			query = "SELECT airport_name FROM airport WHERE city = \"" + request.form['arrCity'] + "\""
+			cursor.execute(query)
+			arr_airport_names = cursor.fetchall()
+			print(arr_airport_names)
+			print(dep_airport_names)
+			query = "Select * from flight where departure_date = \"" + request.form['depDate'] + "\" and ("
+			for dep in dep_airport_names:
+				for arr in arr_airport_names:
+					query += "(departure_airport = \"" + dep.get('airport_name') + "\" and arrival_airport = \"" + arr.get('airport_name') + "\") or "
+			query += "flight_number = -1)"
+			print(query)
+		if request.form.get("SearchAirport"):
+			query = "SELECT * FROM `flight` WHERE departure_airport = \"" + request.form['depAirport'] + \
+					"\" AND arrival_airport = \"" + request.form['arrAirport'] + "\"AND departure_date = \"" + \
+					request.form['depDate'] + "\""
+
+		if request.form.get("SearchStatus"):
+			query = "SELECT * FROM `flight` WHERE airline_name = \"" + request.form['airlineName'] + \
+					"\" AND flight_number = \"" + request.form['flightNumber'] + "\"AND departure_date = \"" + \
+					request.form['depDate'] + "\"" + "AND arrival_date = \"" + request.form['arrDate'] + "\""
+
+		return redirect(url_for("results", query = query))
+	return render_template("publicsearch.html")
+
+# public searching page
+@app.route("/results/<query>", methods=["GET", "POST"])
+def results(query):
+	cursor = mysql.cursor()
+	cursor.execute(query)
+	info = cursor.fetchall()
+	print(type(info))
+	if not "username" in session:
+		return render_template("results.html", info = info)
+	userType = session["userType"]
+	if userType == "customer":
+		return render_template("customerresults.html", info = info)
+	elif userType == "agent":
+		return render_template("agentresults.html", info = info)
+	elif userType == "staff":
+		return render_template("staffresults.html", info = info)
+	return render_template("results.html", info = info)
 
 #login page
 @app.route("/login", methods=["GET", "POST"])
@@ -107,8 +137,8 @@ def login():
 # logout page
 @app.route("/logout", methods=["GET"])
 def logout():
-    session.pop("username")
-    return redirect("/login")
+	session.pop("username")
+	return redirect("/login")
 
 # registration for new users
 @app.route("/register", methods=["GET", "POST"])
@@ -310,51 +340,42 @@ def staffflights():
 	query = "Select airline_name from staff where username = \"" + session['username'] + "\""
 	cursor.execute(query)
 	airline_name = cursor.fetchone().get("airline_name")
+	print(airline_name)
 	query = "Select * from flight where airline_name = \"" + airline_name + "\""
 	cursor.execute(query)
 	info = cursor.fetchall()
-	customers = []
-	query = f"Select flight_number from flight where airline_name = \'{airline_name}\'"
-	cursor.execute(query)
-	flightNumbers = cursor.fetchall()
-	for num in flightNumbers:
-		num = num.get("flight_number")
-		query = f'''SELECT customer.name
-		from ticket NATURAL JOIN purchases NATURAL JOIN customer
-		where ticket.flight_number = {num}'''
-		cursor.execute(query)
-		names = cursor.fetchall()
-		name_list = []
-		for name in names:
-			name = name.get("name")
-			name_list.append(name)
-		customers.append(name_list)
+	print(type(info[0]))
 	# info should be a list of lists, where each inner list is a flight.
-	return render_template("staffflights.html", info=info, customers=customers)
-
+	return render_template("staffflights.html", info= info)
 @app.route("/addstuff", methods=["GET", "POST"])
 @staff_login_required
 def addstuff():
 	error = None
 	if request.method == "POST":
-		cursor = mysql.cursor()
-		query = ""
+		info = []
 		if len(request.form) == 2:   # it's a new airport
-			query = f'''INSERT into airport values (\'{request.form['airportName']}\',
-			\'{request.form['city']}\')'''
+			name = request.form['airportName']
+			city = request.form['city']
+			# need to add to db now..
 		elif len(request.form) == 3: # it's a new airplane
-			query = f'''INSERT into airplane values (\'{request.form['airplaneID']}\',
-			\'{request.form['numSeats']}\', \'{request.form['airlineName']}\')'''
+			airplaneId = request.form['airplaneID']
+			numSeats = request.form['numSeats']
+			name = request.form['airlineName']
+
+			# need to add to db now..
 		else:  						 # it's a new flight
-			status = request.form['status']
-			status = "On Time" if status == 'ontime' else 'Delayed'
-			query = f'''INSERT into flight values (\'{request.form['airlineName']}\',
-			\'{status}\', \'{request.form['flightNumber']}\', \'{request.form['depAirport']}\', 
-			\'{request.form['depDate']}\', \'{request.form['depTime']}\', \'{request.form['arrAirport']}\', 
-			\'{request.form['arrDate']}\', \'{request.form['arrTime']}\', \'{request.form['basePrice']}\',
-			\'{request.form['airplaneID']}\')'''
-		cursor.execute(query)
-		cursor.close()
+			airlineName = request.form['airlineName']
+			status = request.form['status'] # ontime or delayed
+			flightNumber = request.form['flightNumber']
+			depAirport = request.form['depAirport']
+			depDate = request.form['depDate'] # of the format 2021-04-22
+			depTime = request.form['depTime'] # of the format 00:00 - 23:59
+			arrAirport = request.form['arrAirport']
+			arrDate = request.form['arrDate']
+			arrTime = request.form['arrTime']
+			price = request.form['basePrice']
+			airplaneID = request.form['airplaneID']
+			# need to add to db now..
 	return render_template("addstuff.html", error=error)
 
 @app.route("/changestatus", methods=["GET", "POST"])
@@ -362,14 +383,11 @@ def addstuff():
 def changestatus():
 	error = None
 	if request.method == "POST":
-		cursor = mysql.cursor()
-		status = request.form['status']
-		status = "On Time" if status == 'ontime' else 'Delayed'
-		query = f'''update flight set status = \'{status}\' where
-		flight_number = \'{request.form['flightNumber']}\' and departure_date = 
-		\'{request.form['depDate']}\' and departure_time = \'{request.form['depTime']}\''''
-		cursor.execute(query)
-		cursor.close()
+		flightNumber = request.form['flightNumber']
+		depDate = request.form['depDate'] # of the format 2021-04-22
+		depTime = request.form['depTime'] # of the format 00:00 - 23:59
+		newStatus = request.form['status'] # ontime or delayed
+		# change the db now...
 	return render_template("changestatus.html")
 
 
