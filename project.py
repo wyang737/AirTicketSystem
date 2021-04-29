@@ -192,11 +192,26 @@ def customer():
 @app.route("/customerflights")
 @customer_login_required
 def customerflights():
-	info = []
-	flight_info = ['China Eastern', 'Delayed', 123456789, 'JFK', '2021-03-30', '12:30:12', 'PVG', '2021-03-31', '08:30:59', 500, 1234567890]
-	info.append(flight_info)
-	flight_info = ['United', 'On Time', 445566778, 'JFK', '2021-03-30', '11:33:22', 'PVG', '2021-03-31', '12:55:11', 345, 98989898]
-	info.append(flight_info)
+	cursor = mysql.cursor()
+	query = "Select ticket_id from purchases where customer_email = \"" + session['username'] + "\""
+	cursor.execute(query)
+	ticket_ids = cursor.fetchall()
+	print(ticket_ids)
+	query = "Select flight_number from ticket where ticket_id = "
+	for item in ticket_ids:
+		query += str(item.get('ticket_id'))
+		query += " or ticket_id = "
+	query += " -1 "
+	print(query)
+	cursor.execute(query)
+	flight_numbers = cursor.fetchall()
+	query = "Select * from flight where flight_number = "
+	for item in flight_numbers:
+		query += str(item.get('flight_number'))
+		query += " or flight_number = "
+	query += " -1 "
+	cursor.execute(query)
+	info = cursor.fetchall()
 	# info should be a list of lists, where each inner list is a flight.
 	return render_template("customerflights.html", info = info)
 
@@ -278,11 +293,8 @@ def staffflights():
 	airline_name = cursor.fetchone().get("airline_name")
 	print(airline_name)
 	query = "Select * from flight where airline_name = \"" + airline_name + "\""
-	print(query)
-	info = []
 	print(cursor.execute(query))
 	info = cursor.fetchall()
-
 	print(type(info[0]))
 	# info should be a list of lists, where each inner list is a flight.
 	return render_template("staffflights.html", info= info)
