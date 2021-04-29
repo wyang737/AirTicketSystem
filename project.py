@@ -281,12 +281,11 @@ def staffflights():
 	print(query)
 	info = []
 	print(cursor.execute(query))
-	flight_info = cursor.fetchall()
-	print(flight_info)
-	info.append(flight_info)
+	info = cursor.fetchall()
+
 	print(type(info[0]))
 	# info should be a list of lists, where each inner list is a flight.
-	return render_template("staffflights.html", info=info)
+	return render_template("staffflights.html", info= info)
 @app.route("/addstuff", methods=["GET", "POST"])
 @staff_login_required
 def addstuff():

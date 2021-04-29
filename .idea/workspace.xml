@@ -18,6 +18,7 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="restartRequiresConfirmation" value="false" />
   </component>
   <component name="RunManager" selected="Python.project">
     <configuration name="app" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
@@ -81,25 +82,41 @@
     <servers />
   </component>
   <component name="WindowStateProjectService">
-    <state width="1685" height="269" key="GridCell.Tab.0.bottom" timestamp="1618781673096">
+    <state width="1095" height="413" key="GridCell.Tab.0.bottom" timestamp="1619711493066">
       <screen x="0" y="0" width="1707" height="1027" />
     </state>
     <state width="1659" height="277" key="GridCell.Tab.0.bottom/0.0.1680.1010@0.0.1680.1010" timestamp="1618527772223" />
-    <state width="1685" height="269" key="GridCell.Tab.0.bottom/0.0.1707.1027@0.0.1707.1027" timestamp="1618781673096" />
-    <state width="1685" height="269" key="GridCell.Tab.0.center" timestamp="1618781673096">
+    <state width="1095" height="413" key="GridCell.Tab.0.bottom/0.0.1707.1027@0.0.1707.1027" timestamp="1619711493066" />
+    <state width="1095" height="413" key="GridCell.Tab.0.center" timestamp="1619711493065">
       <screen x="0" y="0" width="1707" height="1027" />
     </state>
     <state width="1659" height="277" key="GridCell.Tab.0.center/0.0.1680.1010@0.0.1680.1010" timestamp="1618527772222" />
-    <state width="1685" height="269" key="GridCell.Tab.0.center/0.0.1707.1027@0.0.1707.1027" timestamp="1618781673096" />
-    <state width="1685" height="269" key="GridCell.Tab.0.left" timestamp="1618781673096">
+    <state width="1095" height="413" key="GridCell.Tab.0.center/0.0.1707.1027@0.0.1707.1027" timestamp="1619711493065" />
+    <state width="1095" height="413" key="GridCell.Tab.0.left" timestamp="1619711493065">
       <screen x="0" y="0" width="1707" height="1027" />
     </state>
     <state width="1659" height="277" key="GridCell.Tab.0.left/0.0.1680.1010@0.0.1680.1010" timestamp="1618527772222" />
-    <state width="1685" height="269" key="GridCell.Tab.0.left/0.0.1707.1027@0.0.1707.1027" timestamp="1618781673096" />
-    <state width="1685" height="269" key="GridCell.Tab.0.right" timestamp="1618781673096">
+    <state width="1095" height="413" key="GridCell.Tab.0.left/0.0.1707.1027@0.0.1707.1027" timestamp="1619711493065" />
+    <state width="1095" height="413" key="GridCell.Tab.0.right" timestamp="1619711493066">
       <screen x="0" y="0" width="1707" height="1027" />
     </state>
     <state width="1659" height="277" key="GridCell.Tab.0.right/0.0.1680.1010@0.0.1680.1010" timestamp="1618527772222" />
-    <state width="1685" height="269" key="GridCell.Tab.0.right/0.0.1707.1027@0.0.1707.1027" timestamp="1618781673096" />
+    <state width="1095" height="413" key="GridCell.Tab.0.right/0.0.1707.1027@0.0.1707.1027" timestamp="1619711493066" />
+    <state width="1095" height="342" key="GridCell.Tab.1.bottom" timestamp="1619709739487">
+      <screen x="0" y="0" width="1707" height="1027" />
+    </state>
+    <state width="1095" height="342" key="GridCell.Tab.1.bottom/0.0.1707.1027@0.0.1707.1027" timestamp="1619709739487" />
+    <state width="1095" height="342" key="GridCell.Tab.1.center" timestamp="1619709739487">
+      <screen x="0" y="0" width="1707" height="1027" />
+    </state>
+    <state width="1095" height="342" key="GridCell.Tab.1.center/0.0.1707.1027@0.0.1707.1027" timestamp="1619709739487" />
+    <state width="1095" height="342" key="GridCell.Tab.1.left" timestamp="1619709739487">
+      <screen x="0" y="0" width="1707" height="1027" />
+    </state>
+    <state width="1095" height="342" key="GridCell.Tab.1.left/0.0.1707.1027@0.0.1707.1027" timestamp="1619709739487" />
+    <state width="1095" height="342" key="GridCell.Tab.1.right" timestamp="1619709739487">
+      <screen x="0" y="0" width="1707" height="1027" />
+    </state>
+    <state width="1095" height="342" key="GridCell.Tab.1.right/0.0.1707.1027@0.0.1707.1027" timestamp="1619709739487" />
   </component>
 </project>
