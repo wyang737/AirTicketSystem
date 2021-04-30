@@ -340,42 +340,51 @@ def staffflights():
 	query = "Select airline_name from staff where username = \"" + session['username'] + "\""
 	cursor.execute(query)
 	airline_name = cursor.fetchone().get("airline_name")
-	print(airline_name)
 	query = "Select * from flight where airline_name = \"" + airline_name + "\""
 	cursor.execute(query)
 	info = cursor.fetchall()
-	print(type(info[0]))
+	customers = []
+	query = f"Select flight_number from flight where airline_name = \'{airline_name}\'"
+	cursor.execute(query)
+	flightNumbers = cursor.fetchall()
+	for num in flightNumbers:
+		num = num.get("flight_number")
+		query = f'''SELECT customer.name
+		from ticket NATURAL JOIN purchases NATURAL JOIN customer
+		where ticket.flight_number = {num}'''
+		cursor.execute(query)
+		names = cursor.fetchall()
+		name_list = []
+		for name in names:
+			name = name.get("name")
+			name_list.append(name)
+		customers.append(name_list)
 	# info should be a list of lists, where each inner list is a flight.
-	return render_template("staffflights.html", info= info)
+	return render_template("staffflights.html", info=info, customers=customers)
+
 @app.route("/addstuff", methods=["GET", "POST"])
 @staff_login_required
 def addstuff():
 	error = None
 	if request.method == "POST":
-		info = []
+		cursor = mysql.cursor()
+		query = ""
 		if len(request.form) == 2:   # it's a new airport
-			name = request.form['airportName']
-			city = request.form['city']
-			# need to add to db now..
+			query = f'''INSERT into airport values (\'{request.form['airportName']}\',
+			\'{request.form['city']}\')'''
 		elif len(request.form) == 3: # it's a new airplane
-			airplaneId = request.form['airplaneID']
-			numSeats = request.form['numSeats']
-			name = request.form['airlineName']
-
-			# need to add to db now..
+			query = f'''INSERT into airplane values (\'{request.form['airplaneID']}\',
+			\'{request.form['numSeats']}\', \'{request.form['airlineName']}\')'''
 		else:  						 # it's a new flight
-			airlineName = request.form['airlineName']
-			status = request.form['status'] # ontime or delayed
-			flightNumber = request.form['flightNumber']
-			depAirport = request.form['depAirport']
-			depDate = request.form['depDate'] # of the format 2021-04-22
-			depTime = request.form['depTime'] # of the format 00:00 - 23:59
-			arrAirport = request.form['arrAirport']
-			arrDate = request.form['arrDate']
-			arrTime = request.form['arrTime']
-			price = request.form['basePrice']
-			airplaneID = request.form['airplaneID']
-			# need to add to db now..
+			status = request.form['status']
+			status = "On Time" if status == 'ontime' else 'Delayed'
+			query = f'''INSERT into flight values (\'{request.form['airlineName']}\',
+			\'{status}\', \'{request.form['flightNumber']}\', \'{request.form['depAirport']}\', 
+			\'{request.form['depDate']}\', \'{request.form['depTime']}\', \'{request.form['arrAirport']}\', 
+			\'{request.form['arrDate']}\', \'{request.form['arrTime']}\', \'{request.form['basePrice']}\',
+			\'{request.form['airplaneID']}\')'''
+		cursor.execute(query)
+		cursor.close()
 	return render_template("addstuff.html", error=error)
 
 @app.route("/changestatus", methods=["GET", "POST"])
@@ -383,11 +392,14 @@ def addstuff():
 def changestatus():
 	error = None
 	if request.method == "POST":
-		flightNumber = request.form['flightNumber']
-		depDate = request.form['depDate'] # of the format 2021-04-22
-		depTime = request.form['depTime'] # of the format 00:00 - 23:59
-		newStatus = request.form['status'] # ontime or delayed
-		# change the db now...
+		cursor = mysql.cursor()
+		status = request.form['status']
+		status = "On Time" if status == 'ontime' else 'Delayed'
+		query = f'''update flight set status = \'{status}\' where
+		flight_number = \'{request.form['flightNumber']}\' and departure_date = 
+		\'{request.form['depDate']}\' and departure_time = \'{request.form['depTime']}\''''
+		cursor.execute(query)
+		cursor.close()
 	return render_template("changestatus.html")
 
 
