@@ -14,6 +14,7 @@ td, th {
   padding: 8px;
 }
 </style>
+<h3> Departure Flights </h3>
 <table>
   <tr>
     <th>Airline Name</th>
@@ -46,7 +47,7 @@ td, th {
   {% endfor %}
   {% endif %}
 </table>
-Arrival Flights
+<h3> Arrival Flights</h3>
 <table>
   <tr>
     <th>Airline Name</th>
@@ -61,7 +62,7 @@ Arrival Flights
     <th>Base Price</th>
     <th>Airplane ID</th>
   </tr>
-  {% if info %}
+  {% if info1 %}
   {% for item in info1 %}
     <tr>
       <td> {{item.airline_name}} </td>
@@ -79,7 +80,4 @@ Arrival Flights
   {% endfor %}
   {% endif %}
 </table>
-
-{% endblock %}
-
 {% endblock %}
