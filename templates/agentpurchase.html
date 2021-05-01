@@ -1,4 +1,4 @@
-{% extends "customerbase.html" %}
+{% extends "agentbase.html" %}
 {% block title %} Purchase Ticket {% endblock %}
 {% block content %}
 <style>
@@ -33,7 +33,7 @@ td, th {
 <h1> Please Enter Payment Information:</h1>
 <div> 
   <form action="" method="post">
-      <label for="name"> Email: </label>
+      <label for="name"> Customer Email: </label>
       <input type="text" name="email" placeholder="john.smith@gmail.com" required/>
       <br/>
       <label for="name"> Card Type:

@@ -14,6 +14,7 @@ td, th {
   padding: 8px;
 }
 </style>
+<form action="" method="post">
 <table>
   <tr>
     <th>Airline Name</th>
@@ -27,6 +28,7 @@ td, th {
     <th>Arrival Time</th>
     <th>Base Price</th>
     <th>Airplane ID</th>
+    <th>Purchase Ticket</th>
   </tr>
   {% if info %}
   {% for item in info %}
@@ -42,9 +44,13 @@ td, th {
         <td>    {{item.arrival_time}}</td>
         <td>    {{item.base_price}}</td>
         <td>    {{item.airplane_id}} </td>
+        <td>
+          <input type="submit" name="{{item.flight_number}}|{{item.airline_name}}|{{item.base_price}}|{{item.departure_date}}|{{item.departure_time}}" value="Purchase">
+        </td>
     </tr>
   {% endfor %}
   {% endif %}
 </table>
+</form>
 
 {% endblock %}
