@@ -8,7 +8,16 @@ app = Flask(__name__)
 app.secret_key = "super secret key"
 mysql = pymysql.connect(host="localhost", user="root", password="", db="airticketsystem",
 						charset="utf8mb4", port=3306, cursorclass=pymysql.cursors.DictCursor, autocommit=True)
+labels = [
+    'JAN', 'FEB', 'MAR', 'APR',
+    'MAY', 'JUN', 'JUL', 'AUG',
+    'SEP', 'OCT', 'NOV', 'DEC'
+]
 
+colors = [
+    "#F7464A", "#46BFBD", "#FDB45C", "#FEDCBA",
+    "#ABCDEF", "#DDDDDD", "#ABCABC", "#4169E1",
+    "#C71585", "#FF4500", "#FEDCBA", "#46BFBD"]
 
 def customer_login_required(f):
 	@wraps(f)
@@ -392,6 +401,118 @@ def rate():
 			error = "Rate & Comment were Succesful!"
 			return redirect(url_for('rate'))
 	return render_template("rate.html", info=info, error=error)
+
+# track my spending
+@app.route("/spending", methods=["POST", "GET"])
+@customer_login_required
+def spending():
+	today = datetime.datetime.now()
+	# default shows spendings from the past year
+	old_datetime = today - datetime.timedelta(weeks = 52)
+	today_date = today.strftime("%Y-%m-%d")
+	old_date = old_datetime.strftime("%Y-%m-%d")
+	cursor = mysql.cursor()
+	query = f'''select sold_price from purchases where customer_email = \'{session['username']}\'
+	and purchase_date > \'{old_date}\''''
+	cursor.execute(query)
+	total_spending = 0
+	for price in cursor.fetchall():
+		total_spending += price['sold_price']
+
+	bar_labels = labels
+	# getting spendings by month for past 6 months
+	values = []
+	current_month = int(today.strftime("%m"))
+	current_year = int(today.strftime("%Y"))
+	if current_month >= 6:
+		bar_labels = bar_labels[current_month - 6 : current_month]
+		for x in range(1, current_month + 1):
+			query = f'''select sold_price from purchases where customer_email = \'{session['username']}\'
+			and month(purchase_date) = {x} and year(purchase_date) = {current_year}'''
+			cursor.execute(query)
+			monthly_spending = 0
+			for price in cursor.fetchall():
+				monthly_spending += price['sold_price']
+			values.append(monthly_spending)
+
+	else: # have to deal with wrapping around of months...
+		extras = bar_labels[12 - (6 - current_month):] # get end of last year
+		bar_labels = extras + bar_labels[:current_month]
+		for x in range(1, current_month + 1): # this year's months
+			query = f'''select sold_price from purchases where customer_email = \'{session['username']}\'
+			and month(purchase_date) = {x} and year(purchase_date) = {current_year}'''
+			cursor.execute(query)
+			monthly_spending = 0
+			for price in cursor.fetchall():
+				monthly_spending += price['sold_price']
+			values.append(monthly_spending)
+		extra = 6 - current_month
+		for x in range((13 - extra), 13): # last year's months
+			query = f'''select sold_price from purchases where customer_email = \'{session['username']}\'
+			and month(purchase_date) = {x} and year(purchase_date) = {current_year - 1}'''
+			cursor.execute(query)
+			monthly_spending = 0
+			for price in cursor.fetchall():
+				monthly_spending += price['sold_price']
+			values.append(monthly_spending)
+
+	if request.method == "POST": # recalculate total
+		values = []
+		old_date = request.form['date1']
+		today_date = request.form['date2']
+		date1 = old_date
+		date2 = today_date
+		bar_labels = labels
+		query = f''' select sold_price from purchases where customer_email = \'{session['username']}\'
+		and purchase_date > \'{date1}\' and purchase_date < \'{date2}\''''
+		cursor.execute(query)
+		total_spending = 0
+		for price in cursor.fetchall():
+			total_spending += price['sold_price']
+
+		# now get monthly spendings in this new range
+		date1 = date1.split("-")
+		year1, month1, day1 = date1
+		date2 = date2.split("-")
+		year2, month2, day2 = date2
+		if int(month1) < int(month2) and year1 == year2: # easy case
+			for x in range(int(month1), int(month2) + 1):
+				query = f'''select sold_price from purchases where customer_email = \'{session['username']}\'
+				and month(purchase_date) = {x} and year(purchase_date) = {year1}'''
+				cursor.execute(query)
+				monthly_spending = 0
+				for price in cursor.fetchall():
+					monthly_spending += price['sold_price']
+				values.append(monthly_spending)
+			bar_labels = bar_labels[int(month1) - 1:int(month2)]
+		elif int(month1) == int(month2) and year1 == year2: # still easy case
+			query = f'''select sold_price from purchases where customer_email = \'{session['username']}\'
+			and month(purchase_date) = {month1} and year(purchase_date) = {year1}'''
+			cursor.execute(query)
+			monthly_spending = 0
+			for price in cursor.fetchall():
+				monthly_spending += price['sold_price']
+			values.append(monthly_spending)
+			bar_labels = [bar_labels[int(month1) - 1]] # just one month
+		elif int(month1) > int(month2) and int(year1) == int(year2) - 1: # slightly harder case
+			for x in range(int(month1), 13): # payments from last year
+				query = f'''select sold_price from purchases where customer_email = \'{session['username']}\'
+				and month(purchase_date) = {x} and year(purchase_date) = {year1}'''
+				cursor.execute(query)
+				monthly_spending = 0
+				for price in cursor.fetchall():
+					monthly_spending += price['sold_price']
+				values.append(monthly_spending)
+			for x in range(1, int(month2) + 1): # payments from this year
+				query = f'''select sold_price from purchases where customer_email = \'{session['username']}\'
+				and month(purchase_date) = {x} and year(purchase_date) = {year2}'''
+				cursor.execute(query)
+				monthly_spending = 0
+				for price in cursor.fetchall():
+					monthly_spending += price['sold_price']
+				values.append(monthly_spending)
+			bar_labels = bar_labels[int(month1) - 1:] + bar_labels[:int(month2)]
+	return render_template("spending.html", total = total_spending, max = 10000, labels=bar_labels, values=values, old=old_date, today=today_date)
 
 
 @app.route("/agent")
