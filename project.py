@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, send_file
+from datetime import datetime
 import pymysql
 from functools import wraps
 import ast
@@ -77,8 +78,6 @@ def publicsearch():
 			query = "SELECT airport_name FROM airport WHERE city = \"" + request.form['arrCity'] + "\""
 			cursor.execute(query)
 			arr_airport_names = cursor.fetchall()
-			print(arr_airport_names)
-			print(dep_airport_names)
 			query = "Select * from flight where departure_date = \"" + request.form['depDate'] + "\" and ("
 			for dep in dep_airport_names:
 				for arr in arr_airport_names:
@@ -86,8 +85,7 @@ def publicsearch():
 						'airport_name') + "\" and arrival_airport = \"" + arr.get('airport_name') + "\") or "
 			query += "flight_number = -1)"
 			#if round trip
-			if request.form['retDate']:
-				print(query)
+			#if request.form['retDate']:
 		if request.form.get("SearchAirport"):
 			query = "SELECT * FROM `flight` WHERE departure_airport = \"" + request.form['depAirport'] + \
 					"\" AND arrival_airport = \"" + request.form['arrAirport'] + "\"AND departure_date = \"" + \
@@ -97,9 +95,15 @@ def publicsearch():
 			query = "SELECT * FROM `flight` WHERE airline_name = \"" + request.form['airlineName'] + \
 					"\" AND flight_number = \"" + request.form['flightNumber'] + "\"AND departure_date = \"" + \
 					request.form['depDate'] + "\"" + "AND arrival_date = \"" + request.form['arrDate'] + "\""
-
 		return redirect(url_for("results", query=query))
-	return render_template("publicsearch.html")
+	if not "username" in session:
+		return render_template("publicsearch.html")
+	elif session['userType'] == "customer":
+		return render_template("customerps.html")
+	elif session['userType'] == "staff":
+		return render_template("staffps.html")
+	else:
+		return render_template("agentps.html")
 
 
 # public searching page
@@ -108,13 +112,18 @@ def results(query):
 	cursor = mysql.cursor()
 	cursor.execute(query)
 	info = cursor.fetchall()
-	print(type(info))
 	if not "username" in session:
 		return render_template("results.html", info=info)
 	userType = session["userType"]
 	if userType == "customer":
+		if request.method == "POST":
+			flight_info = list(request.form)[0]
+			return (redirect(url_for("customerpurchase", flight_info=flight_info)))
 		return render_template("customerresults.html", info=info)
 	elif userType == "agent":
+		if request.method == "POST":
+			flight_info = list(request.form)[0]
+			return (redirect(url_for("agentpurchase", flight_info=flight_info)))
 		return render_template("agentresults.html", info=info)
 	elif userType == "staff":
 		return render_template("staffresults.html", info=info)
@@ -145,6 +154,11 @@ def login():
 		elif cursor.execute(agentQuery):  # successful agent login
 			session["username"] = request.form['username']
 			session["userType"] = "agent"
+			idQuery = f'''Select booking_agent_id from bookingagent where 
+			booking_agent_email = \'{request.form['username']}\''''
+			cursor.execute(idQuery)
+			agentID = cursor.fetchone()['booking_agent_id']
+			session["agentID"] = str(agentID)
 			return redirect(url_for('agent'))
 		else:  # failed login
 			error = "Invalid username/password, please try again."
@@ -202,8 +216,17 @@ def registeragent():
 		if cursor.execute(query):  # if the email already exists in the db,
 			error = "Email already exists, please try a different email."
 			return render_template("registeragent.html", error=error)
+		query = f'''SELECT booking_agent_id 
+		FROM bookingagent
+		ORDER BY booking_agent_id DESC
+		LIMIT 1'''
+		cursor.execute(query)
+		agentID = cursor.fetchone()['booking_agent_id']
+		agentID += 1
+		if agentID > 99999:
+			agentID = 0
 		query = f'''INSERT INTO BookingAgent VALUES (\'{request.form['email']}\', 
-		\'{request.form['password']}\', {request.form['agentID']}, 0)'''
+		\'{request.form['password']}\', {agentID}, 0)'''
 		if cursor.execute(query):  # successful registration
 			return redirect(url_for('login'))
 	return render_template("registeragent.html", error=error)
@@ -270,20 +293,56 @@ def customerflights():
 	return render_template("customerflights.html", info=info)
 
 
-@app.route("/customerpurchase", methods=["POST", "GET"])
+@app.route("/customerpurchase/<flight_info>", methods=["POST", "GET"])
 @customer_login_required
-def customerpurchase():
-	info = []
-	flight_info = ['China Eastern', 'Delayed', 123456789, 'JFK', '2021-03-30', '12:30:12', 'PVG', '2021-03-31',
-				   '08:30:59', 500, 1234567890, 0]
-	info.append(flight_info)
-	flight_info = ['United', 'On Time', 445566778, 'JFK', '2021-03-30', '11:33:22', 'PVG', '2021-03-31', '12:55:11',
-				   345, 98989898, 1]
-	info.append(flight_info)
+def customerpurchase(flight_info):
+	cursor = mysql.cursor()
+	error = None
+	info = flight_info.split("|")
+	flight_number = info[0]
+	airline_name = info[1]
+	base_price = info[2]
+	depDate = info[3]
+	depTime = info[4]
+
+	query = f'''select airplane_id from flight where flight_number = {flight_number}
+	and departure_date = \'{depDate}\' and departure_time = \'{depTime}\''''
+	cursor.execute(query)
+	airplane_id = cursor.fetchone()['airplane_id']
+	query = f'''select num_seats from airplane where airplane_id = {airplane_id}'''
+	cursor.execute(query)
+	num_seats = cursor.fetchone()['num_seats']
+
+	query = f'''select count(*) from ticket where flight_number = {flight_number}'''
+	cursor.execute(query)
+	num_passengers = cursor.fetchone()['count(*)']
+	if num_passengers >= (num_seats * 0.7):
+		base_price *= 1.2
+	now = datetime.now()
+	date = now.strftime("\'%Y-%m-%d\'") # with quotes already!
+	time = now.strftime("\'%H:%M:00\'") # with quotes already!
+
+	query = f'''SELECT ticket_id 
+	FROM ticket
+	ORDER BY ticket_id DESC
+	LIMIT 1'''
+	cursor.execute(query)
+	ticket_id = cursor.fetchone()['ticket_id'] # get the last ticket_id, add 1
+	ticket_id += 1
+	if ticket_id > 99999999:
+		ticket_id = 0 # wrap back around
 	if request.method == "POST":
-		form = request.form.to_dict()
-		items = list(form.items())[0][0].split(", ")  # so ugly but it works
-	return render_template("customerpurchase.html", info=info)
+		query = f'''insert into purchases values ({ticket_id}, \'{request.form['email']}\',
+		null, {base_price}, {date}, {time}, \'{request.form['cardType']}\', {request.form['cardNumber']},
+		\'{request.form['cardName']}\', \'{request.form['expDate']}\')'''
+		cursor.execute(query)
+
+		query = f'''insert into ticket values ({ticket_id}, \'{airline_name}\',
+		{flight_number})'''
+		cursor.execute(query)
+		error = "Succesful Purchase!"
+	return render_template("customerpurchase.html", name=airline_name,\
+	 number=flight_number, price=base_price, error=error, date = depDate, time = depTime)
 
 
 # rating and commenting
@@ -325,6 +384,67 @@ def rate():
 def agent():
 	return render_template("agent.html", name=session['username'])
 
+@app.route("/agent/<flight_info>", methods = ["POST", "GET"])
+@agent_login_required
+def agentpurchase(flight_info):
+	cursor = mysql.cursor()
+	error = None
+	info = flight_info.split("|")
+	flight_number = info[0]
+	airline_name = info[1]
+	base_price = info[2]
+	depDate = info[3]
+	depTime = info[4]
+
+	query = f'''select airplane_id from flight where flight_number = {flight_number}
+	and departure_date = \'{depDate}\' and departure_time = \'{depTime}\''''
+	cursor.execute(query)
+	airplane_id = cursor.fetchone()['airplane_id']
+	query = f'''select num_seats from airplane where airplane_id = {airplane_id}'''
+	cursor.execute(query)
+	num_seats = cursor.fetchone()['num_seats']
+
+	query = f'''select count(*) from ticket where flight_number = {flight_number}'''
+	cursor.execute(query)
+	num_passengers = cursor.fetchone()['count(*)']
+
+	if num_passengers >= (num_seats * 0.7):
+		base_price *= 1.2
+	now = datetime.now()
+	date = now.strftime("\'%Y-%m-%d\'") # with quotes already!
+	time = now.strftime("\'%H:%M:00\'") # with quotes already!
+	cursor = mysql.cursor()
+	query = f'''SELECT ticket_id 
+	FROM ticket
+	ORDER BY ticket_id DESC
+	LIMIT 1'''
+	cursor.execute(query)
+	ticket_id = cursor.fetchone()['ticket_id'] # get the last ticket_id, add 1
+	ticket_id += 1
+	if ticket_id > 99999999:
+		ticket_id = 0 # wrap back around
+	if request.method == "POST":
+		query = f'''insert into purchases values ({ticket_id}, \'{request.form['email']}\',
+		{session['agentID']}, {base_price}, {date}, {time}, \'{request.form['cardType']}\', {request.form['cardNumber']},
+		\'{request.form['cardName']}\', \'{request.form['expDate']}\')'''
+		cursor.execute(query)
+
+		# update commission
+		query = f'''select commission from bookingagent where booking_agent_id =
+		{session['agentID']}'''
+		cursor.execute(query)
+		commission = cursor.fetchone()['commission']
+		commission += int(int(base_price) * 0.1)
+		query = f'''update bookingagent set commission = {commission} where 
+		booking_agent_email = \'{session['username']}\''''
+		cursor.execute(query)
+
+		query = f'''insert into ticket values ({ticket_id}, \'{airline_name}\',
+		{flight_number})'''
+		cursor.execute(query)
+		error = "Succesful Purchase!"
+	return render_template("agentpurchase.html", name=airline_name,\
+	 number=flight_number, price=base_price, error=error)
 
 @app.route("/agentflights")
 @agent_login_required
