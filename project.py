@@ -68,34 +68,46 @@ def index():
 @app.route("/publicsearch", methods=["GET", "POST"])
 def publicsearch():
 	cursor = mysql.cursor()
-	query = ""
+	queryDep = ""
+	queryRet = "Select * from flight where flight_number = -1"
 	info = []
 	if request.method == "POST":
 		if request.form.get("SearchCity"):
-			query = "SELECT airport_name FROM airport WHERE city = \"" + request.form['depCity'] + "\""
-			cursor.execute(query)
+			queryDep = "SELECT airport_name FROM airport WHERE city = \"" + request.form['depCity'] + "\""
+			cursor.execute(queryDep)
 			dep_airport_names = cursor.fetchall()
-			query = "SELECT airport_name FROM airport WHERE city = \"" + request.form['arrCity'] + "\""
-			cursor.execute(query)
+			queryDep = "SELECT airport_name FROM airport WHERE city = \"" + request.form['arrCity'] + "\""
+			cursor.execute(queryDep)
 			arr_airport_names = cursor.fetchall()
-			query = "Select * from flight where departure_date = \"" + request.form['depDate'] + "\" and ("
+			cursor.close()
+			queryDep = "Select * from flight where departure_date = \"" + request.form['depDate'] + "\" and ("
 			for dep in dep_airport_names:
 				for arr in arr_airport_names:
-					query += "(departure_airport = \"" + dep.get(
+					queryDep += "(departure_airport = \"" + dep.get(
 						'airport_name') + "\" and arrival_airport = \"" + arr.get('airport_name') + "\") or "
-			query += "flight_number = -1)"
-			#if round trip
-			#if request.form['retDate']:
+			queryDep += "flight_number = -1)"
+			# if round trip
+			if request.form['retDate']:
+				queryRet = "Select * from flight where arrival_date = \"" + request.form['retDate'] + "\" and ("
+				for dep in dep_airport_names:
+					for arr in arr_airport_names:
+						queryRet += "(departure_airport = \"" + arr.get(
+							'airport_name') + "\" and arrival_airport = \"" + dep.get('airport_name') + "\") or "
+				queryRet += "flight_number = -1)"
 		if request.form.get("SearchAirport"):
-			query = "SELECT * FROM `flight` WHERE departure_airport = \"" + request.form['depAirport'] + \
-					"\" AND arrival_airport = \"" + request.form['arrAirport'] + "\"AND departure_date = \"" + \
-					request.form['depDate'] + "\""
-
+			queryDep = "SELECT * FROM `flight` WHERE departure_airport = \"" + request.form['depAirport'] + \
+					   "\" AND arrival_airport = \"" + request.form['arrAirport'] + "\"AND departure_date = \"" + \
+					   request.form['depDate'] + "\""
+			# if round trip
+			if request.form['retDate']:
+				queryRet = "SELECT * FROM `flight` WHERE departure_airport = \"" + request.form['arrAirport'] + \
+						   "\" AND arrival_airport = \"" + request.form['depAirport'] + "\"AND arrival_date = \"" + \
+						   request.form['retDate'] + "\""
 		if request.form.get("SearchStatus"):
-			query = "SELECT * FROM `flight` WHERE airline_name = \"" + request.form['airlineName'] + \
-					"\" AND flight_number = \"" + request.form['flightNumber'] + "\"AND departure_date = \"" + \
-					request.form['depDate'] + "\"" + "AND arrival_date = \"" + request.form['arrDate'] + "\""
-		return redirect(url_for("results", query=query))
+			queryDep = "SELECT * FROM `flight` WHERE airline_name = \"" + request.form['airlineName'] + \
+					   "\" AND flight_number = \"" + request.form['flightNumber'] + "\"AND departure_date = \"" + \
+					   request.form['depDate'] + "\"" + "AND arrival_date = \"" + request.form['arrDate'] + "\""
+		return redirect(url_for("results", queryDep=queryDep, queryRet=queryRet))
 	if not "username" in session:
 		return render_template("publicsearch.html")
 	elif session['userType'] == "customer":
@@ -107,27 +119,30 @@ def publicsearch():
 
 
 # public searching page
-@app.route("/results/<query>", methods=["GET", "POST"])
-def results(query):
+@app.route("/results/<queryDep>/<queryRet>", methods=["GET", "POST"])
+def results(queryDep, queryRet=""):
 	cursor = mysql.cursor()
-	cursor.execute(query)
+	cursor.execute(queryDep)
 	info = cursor.fetchall()
+	cursor = mysql.cursor()
+	cursor.execute(queryRet)
+	info1 = cursor.fetchall()
 	if not "username" in session:
-		return render_template("results.html", info=info)
+		return render_template("results.html", info=info, info1=info1)
 	userType = session["userType"]
 	if userType == "customer":
 		if request.method == "POST":
 			flight_info = list(request.form)[0]
 			return (redirect(url_for("customerpurchase", flight_info=flight_info)))
-		return render_template("customerresults.html", info=info)
+		return render_template("customerresults.html", info=info, info1=info1)
 	elif userType == "agent":
 		if request.method == "POST":
 			flight_info = list(request.form)[0]
 			return (redirect(url_for("agentpurchase", flight_info=flight_info)))
-		return render_template("agentresults.html", info=info)
+		return render_template("agentresults.html", info=info, info1=info1)
 	elif userType == "staff":
-		return render_template("staffresults.html", info=info)
-	return render_template("results.html", info=info)
+		return render_template("staffresults.html", info=info, info1=info1)
+	return render_template("results.html", info=info, info1=info1)
 
 
 # login page

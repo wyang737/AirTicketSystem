@@ -46,5 +46,40 @@ td, th {
   {% endfor %}
   {% endif %}
 </table>
+Arrival Flights
+<table>
+  <tr>
+    <th>Airline Name</th>
+    <th>Status</th>
+    <th>Flight Number</th>
+    <th>Departure Airport</th>
+    <th>Departure Date</th>
+    <th>Departure Time</th>
+    <th>Arrival Airport</th>
+    <th>Arrival Date</th>
+    <th>Arrival Time</th>
+    <th>Base Price</th>
+    <th>Airplane ID</th>
+  </tr>
+  {% if info %}
+  {% for item in info1 %}
+    <tr>
+      <td> {{item.airline_name}} </td>
+        <td>    {{item.status}} </td>
+        <td>    {{item.flight_number}} </td>
+        <td>    {{item.departure_airport}}</td>
+        <td>    {{item.departure_date}}</td>
+        <td>    {{item.departure_time}}</td>
+        <td>    {{item.arrival_airport}}</td>
+        <td>    {{item.arrival_date}}</td>
+        <td>    {{item.arrival_time}}</td>
+        <td>    {{item.base_price}}</td>
+        <td>    {{item.airplane_id}} </td>
+    </tr>
+  {% endfor %}
+  {% endif %}
+</table>
+
+{% endblock %}
 
 {% endblock %}
