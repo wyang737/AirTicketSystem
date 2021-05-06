@@ -161,12 +161,13 @@ def login():
 	cursor = mysql.cursor()
 	if request.method == "POST":
 		# check the credentials here...
+		hex_hashed = hashlib.md5(request.form['password'].encode()).hexdigest()
 		customerQuery = "SELECT * FROM customer WHERE customer_email = \"" + request.form[
-			'username'] + "\" AND password = \"" + request.form['password'] + "\""
+			'username'] + "\" AND password = \"" + hex_hashed + "\""
 		staffQuery = "SELECT * FROM staff WHERE username = \"" + request.form['username'] + "\" AND password = \"" + \
-					 request.form['password'] + "\""
+					 hex_hashed + "\""
 		agentQuery = "SELECT * FROM BookingAgent WHERE booking_agent_email = \"" + request.form[
-			'username'] + "\" AND password = \"" + request.form['password'] + "\""
+			'username'] + "\" AND password = \"" + hex_hashed + "\""
 		if cursor.execute(customerQuery):  # successful customer login
 			session["username"] = request.form['username']
 			session["userType"] = "customer"
@@ -187,7 +188,6 @@ def login():
 		else:  # failed login
 			error = "Invalid username/password, please try again."
 	return render_template("login.html", error=error)
-
 
 # logout page
 @app.route("/logout", methods=["GET"])
@@ -221,8 +221,11 @@ def registercustomer():
 		if cursor.execute(query):  # if the email already exists in the db,
 			error = "Email already exists, please try a different email."
 			return render_template("registercustomer.html", error=error)
+		pw2hash = request.form['password']
+		hashed = hashlib.md5(pw2hash.encode())
+		hex_hashed = hashed.hexdigest()
 		query = f'''INSERT INTO customer VALUES (\'{request.form['name']}\', \'{request.form['email']}\', 
-		\'{request.form['password']}\', {request.form['buildingNumber']}, \'{request.form['street']}\', 
+		\'{hex_hashed}\', {request.form['buildingNumber']}, \'{request.form['street']}\', 
 		\'{request.form['city']}\', \'{request.form['state']}\', {request.form['phoneNumber']}, {request.form['passportNumber']},
 		\'{request.form['expDate']}\', \'{request.form['passportCountry']}\', \'{request.form['dateOfBirth']}\')'''
 		if cursor.execute(query):  # successful registration
@@ -249,8 +252,11 @@ def registeragent():
 		agentID += 1
 		if agentID > 99999:
 			agentID = 0
+		pw2hash = request.form['password']
+		hashed = hashlib.md5(pw2hash.encode())
+		hex_hashed = hashed.hexdigest()
 		query = f'''INSERT INTO BookingAgent VALUES (\'{request.form['email']}\', 
-		\'{request.form['password']}\', {agentID}, 0)'''
+		\'{hex_hashed}\', {agentID}, 0)'''
 		if cursor.execute(query):  # successful registration
 			return redirect(url_for('login'))
 	return render_template("registeragent.html", error=error)
@@ -271,13 +277,15 @@ def registerstaff():
 		for num in numbers:
 			query = f'''insert into staffphones values (\'{request.form['email']}\', {num})'''
 			cursor.execute(query)
-		query = f'''INSERT INTO staff VALUES (\'{request.form['email']}\', \'{request.form['password']}\', 
+		pw2hash = request.form['password']
+		hashed = hashlib.md5(pw2hash.encode())
+		hex_hashed = hashed.hexdigest()
+		query = f'''INSERT INTO staff VALUES (\'{request.form['email']}\', \'{hex_hashed}\', 
 		\'{request.form['name']}\', \'{request.form['dateOfBirth']}\', \'{numbers[0]}\', 
 		\'{request.form['airlineName']}\')'''
 		if cursor.execute(query):  # successful registration
 			return redirect(url_for('login'))
 	return render_template("registerstaff.html", error=error)
-
 
 @app.route("/customer")
 @customer_login_required
