@@ -55,7 +55,7 @@ CREATE TABLE Customer
 (
 	name varchar(30),
 	customer_email varchar(30) not null unique,
-	password varchar(20),
+	password varchar(40),
 	building_number int,
 	street varchar(20),
 	city varchar(20),
@@ -82,7 +82,7 @@ CREATE TABLE Rates
 CREATE TABLE BookingAgent
 (
 	booking_agent_email varchar(30) unique,
-	password varchar(20),
+	password varchar(40),
 	booking_agent_id numeric(5, 0),
 	commission int,
 	PRIMARY KEY(booking_agent_email)
@@ -116,7 +116,7 @@ CREATE TABLE StaffPhones
 CREATE TABLE Staff
 (
 	username varchar(20) not null unique,
-	password varchar(20),
+	password varchar(40),
 	name varchar(30),
 	date_of_birth date,
 	phone_number numeric(10, 0),
