@@ -438,14 +438,7 @@ def spending():
 	else: # have to deal with wrapping around of months...
 		extras = bar_labels[12 - (6 - current_month):] # get end of last year
 		bar_labels = extras + bar_labels[:current_month]
-		for x in range(1, current_month + 1): # this year's months
-			query = f'''select sold_price from purchases where customer_email = \'{session['username']}\'
-			and month(purchase_date) = {x} and year(purchase_date) = {current_year}'''
-			cursor.execute(query)
-			monthly_spending = 0
-			for price in cursor.fetchall():
-				monthly_spending += price['sold_price']
-			values.append(monthly_spending)
+		print (bar_labels)
 		extra = 6 - current_month
 		for x in range((13 - extra), 13): # last year's months
 			query = f'''select sold_price from purchases where customer_email = \'{session['username']}\'
@@ -454,6 +447,16 @@ def spending():
 			monthly_spending = 0
 			for price in cursor.fetchall():
 				monthly_spending += price['sold_price']
+			print (str(x) + ": " + str(monthly_spending))
+			values.append(monthly_spending)
+		for x in range(1, current_month + 1): # this year's months
+			query = f'''select sold_price from purchases where customer_email = \'{session['username']}\'
+			and month(purchase_date) = {x} and year(purchase_date) = {current_year}'''
+			cursor.execute(query)
+			monthly_spending = 0
+			for price in cursor.fetchall():
+				monthly_spending += price['sold_price']
+			print (str(x) + ": " + str(monthly_spending))
 			values.append(monthly_spending)
 
 	if request.method == "POST": # recalculate total
@@ -512,8 +515,7 @@ def spending():
 					monthly_spending += price['sold_price']
 				values.append(monthly_spending)
 			bar_labels = bar_labels[int(month1) - 1:] + bar_labels[:int(month2)]
-	return render_template("spending.html", total = total_spending, max = 10000, labels=bar_labels, values=values, old=old_date, today=today_date)
-
+	return render_template("spending.html", total = total_spending, max = 25000, labels=bar_labels, values=values, old=old_date, today=today_date)
 
 @app.route("/agent")
 @agent_login_required
