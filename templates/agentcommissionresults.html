@@ -1,0 +1,9 @@
+{% extends "agentbase.html" %}
+{% block title %} agent {% endblock %}
+{% block content %}
+<body>
+	<h1>Your Commission Is: {{commission}}</h1>
+	<h1>Your Average Commission Is: {{commission/tickets}}</h1>
+    <h1>Your Amount of Tickets Sold Is: {{tickets}}</h1>
+</body>
+{% endblock %}
