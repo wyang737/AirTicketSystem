@@ -634,12 +634,20 @@ def staffflights():
 	airline_name = cursor.fetchone().get("airline_name")
 	query = "Select * from flight where airline_name = \"" + airline_name + "\""
 	cursor.execute(query)
-	info = cursor.fetchall()
 	customers = []
-	query = f"Select flight_number from flight where airline_name = \'{airline_name}\' and CURRENT_DATE < " \
-			f"flight.departure_date OR (CURRENT_DATE = flight.departure_date AND CURRENT_TIME < departure_time)"
+	query = f"Select flight_number from flight where airline_name = \'{airline_name}\' and ((CURRENT_DATE < " \
+			f"flight.departure_date) OR (CURRENT_DATE = flight.departure_date AND CURRENT_TIME < departure_time)) and" \
+			f"(flight.departure_date < ADDDATE(CURRENT_DATE, INTERVAL 30 DAY))"
 	cursor.execute(query)
 	flightNumbers = cursor.fetchall()
+	query = "Select * from flight where flight_number = "
+	for item in flightNumbers:
+		query += str(item.get('flight_number'))
+		query += " or flight_number = "
+	query += " -1 "
+	cursor.execute(query)
+	info = cursor.fetchall()
+	print(flightNumbers)
 	for num in flightNumbers:
 		num = num.get("flight_number")
 		query = f'''SELECT customer.name
