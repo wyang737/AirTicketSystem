@@ -623,6 +623,43 @@ def agentflights():
 
 	# info should be a list of lists, where each inner list is a flight.
 	return render_template("agentflights.html", info=info)
+							 
+@app.route("/agentcommission", methods=["POST", "GET"])
+@agent_login_required
+def agentcommission():
+	cursor = mysql.cursor()
+	query = "Select booking_agent_id from bookingagent where booking_agent_email = \"" + session['username'] + "\""
+	cursor.execute(query)
+	bookingID = cursor.fetchall()
+	query = "SELECT sum(`sold_price`)/10 from purchases where (purchase_date > ADDDATE(CURRENT_DATE, INTERVAL -30 DAY))" \
+			" and booking_agent_id =" + str(bookingID[0].get('booking_agent_id'))
+	cursor.execute(query)
+	commission = cursor.fetchall()[0].get("sum(`sold_price`)/10")
+	query = "SELECT COUNT(*) from purchases WHERE (purchase_date > ADDDATE(CURRENT_DATE, INTERVAL -30 DAY))" \
+			" and `booking_agent_id` =" + str(bookingID[0].get('booking_agent_id'))
+	cursor.execute(query)
+	tickets = cursor.fetchall()[0].get("COUNT(*)")
+	if request.method == "POST":
+		query = "SELECT sum(`sold_price`)/10 from purchases where ((purchase_date > \'" + request.form['begDate'] + "\') and (" \
+						 "purchase_date < \'" + request.form['endDate']
+		query += "\')) and booking_agent_id =" + str(bookingID[0].get('booking_agent_id'))
+		cursor.execute(query)
+		print(query)
+		commission = cursor.fetchall()[0].get("sum(`sold_price`)/10")
+		query = "SELECT COUNT(*) from purchases WHERE ((purchase_date > \'" + request.form['begDate'] + "\') and (" \
+						 "purchase_date < \'" + request.form['endDate']
+		query += "\')) and booking_agent_id =" + str(bookingID[0].get('booking_agent_id'))
+		print(query)
+		cursor.execute(query)
+		tickets = cursor.fetchall()[0].get("COUNT(*)")
+		print(commission)
+		print(tickets)
+		return render_template("agentcommissionresults.html", commission=commission, tickets=tickets)
+	return render_template("agentcommission.html", commission=commission, tickets=tickets)
+
+
+
+
 
 
 @app.route("/staff")
