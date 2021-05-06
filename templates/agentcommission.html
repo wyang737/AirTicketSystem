@@ -2,8 +2,14 @@
 {% block title %} agent {% endblock %}
 {% block content %}
 <body>
-	<h1>Your Commission For The Last 30 Days Is: {{commission}}</h1>
-	<h1>Your Average Commission For The Last 30 Days Is: {{commission/tickets}}</h1>
+    {% if commission %}
+    <h1>Your Commission For The Last 30 Days Is: {{commission}}</h1>
+    <h1>Your Average Commission For The Last 30 Days Is: {{commission/
+    tickets}}</h1>
+    {% else %}
+    <h1>Your Commission For The Last 30 Days Is: 0</h1>
+    <h1>Your Average Commission For The Last 30 Days Is: 0</h1>
+    {% endif %}
     <h1>Your Amount of Tickets Sold For The Last 30 Days Is: {{tickets}}</h1>
 	<h2>Search by Range of Dates:</h2>
     <div>
