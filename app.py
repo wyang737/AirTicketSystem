@@ -780,6 +780,8 @@ def revenue():
 	month_direct = cursor.fetchone()['sum(sold_price)']
 	if (month_direct):
 		month_values.append(int(month_direct))
+	else:
+		month_values.append(0)
 	# last month, indirect revenue:
 	query = f'''SELECT sum(sold_price)
 	FROM ticket NATURAL JOIN purchases
@@ -790,6 +792,8 @@ def revenue():
 	month_indirect = cursor.fetchone()['sum(sold_price)']
 	if (month_indirect):
 		month_values.append(int(month_indirect))
+	else:
+		month_values.append(0)
 	# last year, direct revenue:
 	query = f'''SELECT sum(sold_price)
 	FROM ticket NATURAL JOIN purchases
@@ -799,7 +803,9 @@ def revenue():
 	cursor.execute(query)
 	year_direct = cursor.fetchone()['sum(sold_price)']
 	if (year_direct):
-		month_values.append(int(year_direct))
+		year_values.append(int(year_direct))
+	else:
+		year_values.append(0)
 	# last year, indirect revenue:
 	query = f'''SELECT sum(sold_price)
 	FROM ticket NATURAL JOIN purchases
@@ -809,7 +815,9 @@ def revenue():
 	cursor.execute(query)
 	year_indirect = cursor.fetchone()['sum(sold_price)']
 	if (year_indirect):
-		month_values.append(int(year_indirect))
+		year_values.append(int(year_indirect))
+	else:
+		year_values.append(0)
 	return render_template("revenue.html", title=title, max=25000, m_val = month_values, y_val = year_values, labels = pie_labels, colors = colors)
 
 @app.route("/destinations")
