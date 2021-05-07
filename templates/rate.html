@@ -31,9 +31,9 @@ td, th {
     <th>Rate the Flight</th>
     <th>Comments</th>
   </tr>
-  <form action="" method="POST">
   {% if info %}
   {% for item in info %}
+  <form action="" method="POST">
     <tr>
       <td> {{item.airline_name}} </td>
         <td>    {{item.status}} </td>
