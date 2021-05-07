@@ -666,6 +666,39 @@ def agentcommission():
     print("commission: " + str(commission))
     return render_template("agentcommission.html", commission=commission, tickets=tickets)
 
+@app.route("/topcustomers")
+@agent_login_required
+def topcustomers():
+	cursor = mysql.cursor()
+	bookingID = session['agentID']
+	query = "SELECT `customer_email`, count(*) FROM purchases WHERE purchase_date > ADDDATE(CURRENT_DATE, " \
+			"INTERVAL -6 MONTH) and booking_agent_id = " + bookingID + " GROUP BY " \
+			"`customer_email` ORDER BY COUNT(*) DESC LIMIT 5 "
+	cursor.execute(query)
+	toptickets = cursor.fetchall()
+	topcusttick = []
+	label = []
+	query = "SELECT `customer_email`, sum(sold_price)/10 FROM purchases WHERE purchase_date > ADDDATE(CURRENT_DATE, " \
+			"INTERVAL -1 YEAR) and booking_agent_id = " + bookingID + " GROUP BY " \
+			"`customer_email` ORDER BY sum(sold_price)/10 DESC LIMIT 5"
+	cursor.execute(query)
+	topcustcomm = []
+	label2 = []
+	topcommissions = cursor.fetchall()
+	print(toptickets)
+	print(topcommissions)
+	for item in toptickets:
+		for key, value in item:
+			label.append(key)
+			topcusttick.append(value)
+	for item in topcommissions:
+		topcustcomm.append(item.get('sum(sold_price)/10'))
+	print(topcusttick)
+	print(label)
+	return render_template("topcustomers.html", labels=label, topcusttick=topcusttick, labels2=label2,
+						   topcustcomm=topcustcomm, max=20, max2=2000)
+
+
 @app.route("/staff")
 @staff_login_required
 def staff():
