@@ -1,0 +1,92 @@
+{% extends "staffbase.html" %}
+{% block title %} View Frequent Customers  {% endblock %}
+{% block content %}
+<style>
+.dropbtn {
+  background-color: #04AA6D;
+  color: white;
+  padding: 16px;
+  font-size: 16px;
+  border: none;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f1f1f1;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content a:hover {background-color: #ddd;}
+
+.dropdown:hover .dropdown-content {display: block;}
+
+.dropdown:hover .dropbtn {background-color: #3e8e41;}
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+</style>
+<table>
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Email</th>
+    <th>Address</th>
+    <th>Phone Number</th>
+    <th>Passport Number</th>
+    <th>Country</th>
+    <th>View Flights</th>
+  </tr>
+  {% set count = namespace(value=0) %}
+  {% if info %}
+  {% for item in info %}
+    <tr>
+      <td> {{item[0].name}} </td>
+        <td>    {{item[0].customer_email}} </td>
+        <td>    {{item[0].building_number}} {{item[0].street}}, {{item[0].city}}, {{item[0].state}}</td>
+        <td>    {{item[0].phone_number}}</td>
+        <td>    {{item[0].passport_number}}</td>
+        <td>    {{item[0].passport_country}}</td>
+        <td>
+          <div class="dropdown">
+            <button class="dropbtn">View Flights</button>
+            <div class = "dropdown-content">
+            {% if flights %}
+              {% for flight in flights[count.value] %}
+              <a> Flight Number: {{flight.flight_number}}</a>
+              {% endfor %}
+            {% else %}
+            <a>None</a>
+            {% endif %}
+            </div>
+          </div>
+        </td>
+    </tr>
+    {% set count.value = count.value + 1%}
+  {% endfor %}
+  {% endif %}
+</table>
+</table>
+{% endblock %}
