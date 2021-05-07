@@ -1,0 +1,38 @@
+{% extends "staffbase.html" %}
+{% block title %} agent {% endblock %}
+{% block content %}
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+</style>
+
+	{% if average %}
+	<h1>The Average Rating is: {{average}}</h1>
+    {% endif %}
+	<table>
+  <tr>
+    <th>Customer</th>
+      <th>Comment</th>
+    <th>Rating</th></tr>
+  {% if info %}
+  {% for item in info %}
+    <tr>
+      <td> {{item.customer_email}} </td>
+        <td>    {{item.comment}} </td>
+        <td>    {{item.rating}} </td>
+        </tr>
+  {% endfor %}
+  {% endif %}
+
+</table>
+
+{% endblock %}

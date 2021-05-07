@@ -1016,5 +1016,25 @@ def destinations():
 	year_cities = dictionary.keys()
 	return render_template("destinations.html", month = months_cities, year = year_cities)
 
+@app.route("/ratings", methods=["POST", "GET"])
+@staff_login_required
+def ratings():
+	cursor = mysql.cursor()
+	query = "SELECT * from flight where airline_name = \"" + session["airline_name"] + "\""
+	cursor.execute(query)
+	info = cursor.fetchall()
+	if request.method == "POST":
+		flight_number = request.form["flight_number"]
+		query = "SELECT AVG(`rating`) FROM `rates` WHERE flight_number =" + flight_number
+		cursor.execute(query)
+		average = cursor.fetchone()["AVG(`rating`)"]
+		if not average:
+			average = 0
+		query = "SELECT customer_email, comment, rating FROM `rates` WHERE flight_number =" + flight_number
+		cursor.execute(query)
+		info = cursor.fetchall()
+		return render_template("ratingresults.html", average=average, info=info)
+	return render_template("ratings.html", info=info)
+
 if __name__ == "__main__":
 	app.run(host='localhost', port=5000, debug=True)
