@@ -400,22 +400,8 @@ def customerpurchase(flight_info):
 def rate():
 	cursor = mysql.cursor()
 	error = None
-	query = f'''select ticket_id from purchases where customer_email = \'{session['username']}\'
-	and purchase_date < CURRENT_DATE()'''
-	cursor.execute(query)
-	ticket_ids = cursor.fetchall()
-	query = "Select flight_number from ticket where ticket_id = "
-	for item in ticket_ids:
-		query += str(item.get('ticket_id'))
-		query += " or ticket_id = "
-	query += " -1 "
-	cursor.execute(query)
-	flight_numbers = cursor.fetchall()
-	query = "Select * from flight where (flight_number = "
-	for item in flight_numbers:
-		query += str(item.get('flight_number'))
-		query += " or flight_number = "
-	query += " -1) "
+	query = f'''SELECT * FROM purchases NATURAL JOIN ticket NATURAL JOIN flight
+	WHERE customer_email = \'{session['username']}\' AND arrival_date < CURRENT_DATE()'''
 	cursor.execute(query)
 	info = cursor.fetchall()
 	if request.method == "POST":
@@ -424,7 +410,6 @@ def rate():
 		rating = form['rating']
 		flightNumber = list(form)[2]
 		customer_email = session['username']
-
 		# first need to check if the customer already rated this flight
 		query = f'''select customer_email, flight_number from rates where 
 		customer_email = \'{customer_email}\' and flight_number = {flightNumber}'''
