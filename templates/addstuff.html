@@ -1,13 +1,10 @@
 {% extends "staffbase.html" %}
-{% block title %} agent {% endblock %}
+{% block title %} Add to System {% endblock %}
 {% block content %}
 <body>
 	<h2> Add New Flight</h2>
 	<div>
         <form action="" method="post">
-        	<label for="name"> Airline Name: </label>
-            <input type="text" name="airlineName" placeholder="United" required/>
-            <br/>
             <label for="name"> Status: </label>
             <input type="radio" name="status" value="ontime"> On Time
             <input type="radio" name="status" value="delayed"> Delayed
@@ -39,7 +36,7 @@
             <label for="name"> Airplane ID: </label>
             <input type="text" name="airplaneID" placeholder="1234567890"  required/>
             <br/>
-            <input type="submit" value="Add Flight">
+            <input type="submit" name="flight" value="Add Flight">
         </form>
     </div>
 	<h2> Add New Airport</h2>
@@ -51,7 +48,7 @@
             <label for="name"> Airport City: </label>
             <input type="text" name="city" placeholder="Newark" required/>
             <br/>
-            <input type="submit" value="Add Airport">
+            <input type="submit" name="airport" value="Add Airport">
         </form>
     </div>
 
@@ -64,10 +61,7 @@
             <label for="name"> Number of Seats: </label>
             <input type="text" name="numSeats" placeholder="1000" required/>
             <br/>
-            <label for="name"> Airline Name: </label>
-            <input type="text" name="airlineName" placeholder="United" required/>
-            <br/>
-            <input type="submit" value="Add Airplane">
+            <input type="submit" name="airplane" value="Add Airplane">
         </form>
     </div>
 </body>
