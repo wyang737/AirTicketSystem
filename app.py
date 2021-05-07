@@ -754,16 +754,16 @@ def addstuff():
 	if request.method == "POST":
 		cursor = mysql.cursor()
 		query = ""
-		if len(request.form) == 2:  # it's a new airport
+		if request.form.get("airport"):  # it's a new airport
 			query = f'''INSERT into airport values (\'{request.form['airportName']}\',
 			\'{request.form['city']}\')'''
-		elif len(request.form) == 3:  # it's a new airplane
+		elif request.form.get("airplane"):  # it's a new airplane
 			query = f'''INSERT into airplane values (\'{request.form['airplaneID']}\',
-			\'{request.form['numSeats']}\', \'{request.form['airlineName']}\')'''
+			\'{request.form['numSeats']}\', \'{session['airline_name']}\')'''
 		else:  # it's a new flight
 			status = request.form['status']
 			status = "On Time" if status == 'ontime' else 'Delayed'
-			query = f'''INSERT into flight values (\'{request.form['airlineName']}\',
+			query = f'''INSERT into flight values (\'{session['airline_name']}\',
 			\'{status}\', \'{request.form['flightNumber']}\', \'{request.form['depAirport']}\', 
 			\'{request.form['depDate']}\', \'{request.form['depTime']}\', \'{request.form['arrAirport']}\', 
 			\'{request.form['arrDate']}\', \'{request.form['arrTime']}\', \'{request.form['basePrice']}\',
