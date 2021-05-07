@@ -688,15 +688,15 @@ def topcustomers():
 	print(toptickets)
 	print(topcommissions)
 	for item in toptickets:
-		for key, value in item:
-			label.append(key)
-			topcusttick.append(value)
+		label.append(item["customer_email"])
+		topcusttick.append(item["count(*)"])
 	for item in topcommissions:
-		topcustcomm.append(item.get('sum(sold_price)/10'))
+		label2.append(item["customer_email"])
+		topcustcomm.append(item['sum(sold_price)/10'])
 	print(topcusttick)
 	print(label)
 	return render_template("topcustomers.html", labels=label, topcusttick=topcusttick, labels2=label2,
-						   topcustcomm=topcustcomm, max=20, max2=2000)
+						   topcustcomm=topcustcomm, max=20, max2=500)
 
 
 @app.route("/staff")

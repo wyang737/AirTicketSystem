@@ -1,7 +1,7 @@
 {% extends "agentbase.html" %}
 {% block content %}
 
-<h3> Your total spending from {{old}} to {{today}} is: {{total}}</h3>
+<h3></h3>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -13,10 +13,10 @@
 
 <body>
   <center>
-    <h1>{{ title }}</h1>
+    <h1>Your Top Customers From Tickets Are</h1>
   </center>
   <center>
-    <canvas id="chart" width="600" height="400"></canvas>
+    <canvas id="chart1" width="600" height="400"></canvas>
     <script>
       // bar chart data
       var barData = {
@@ -40,10 +40,58 @@
       }
 
      // get bar chart canvas
-     var mychart = document.getElementById("chart").getContext("2d");
+     var mychart = document.getElementById("chart1").getContext("2d");
 
        steps = 10
        max = {{max}}
+
+     // draw bar chart
+     new Chart(mychart).Bar(barData, {
+       scaleOverride: true,
+       scaleSteps: steps,
+       scaleStepWidth: Math.ceil(max / steps),
+       scaleStartValue: 0,
+       scaleShowVerticalLines: true,
+       scaleShowGridLines : true,
+       barShowStroke : true,
+       scaleShowLabels: true
+       }
+     );
+
+    </script>
+  </center>
+<center>
+    <h1>Your Top Customers From Commission Are</h1>
+  </center>
+  <center>
+    <canvas id="chart2" width="600" height="400"></canvas>
+    <script>
+      // bar chart data
+      var barData = {
+        labels : [
+          {% for item in labels2 %}
+           "{{ item }}",
+          {% endfor %}
+	],
+
+        datasets : [{
+          fillColor: "rgba(151,187,205,0.2)",
+          strokeColor: "rgba(151,187,205,1)",
+          pointColor: "rgba(151,187,205,1)",
+          data : [
+            {% for item in topcustcomm %}
+               "{{ item }}",
+              {% endfor %}
+	    ]
+          }
+        ]
+      }
+
+     // get bar chart canvas
+     var mychart = document.getElementById("chart2").getContext("2d");
+
+       steps = 10
+       max = {{max2}}
 
      // draw bar chart
      new Chart(mychart).Bar(barData, {
