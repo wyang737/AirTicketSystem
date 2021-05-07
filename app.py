@@ -429,12 +429,12 @@ def rate():
 def spending():
 	today = datetime.datetime.now()
 	# default shows spendings from the past year
-	old_datetime = today - datetime.timedelta(days = 365)
-	today_date = today.strftime("%Y-%m-%d")
-	old_date = old_datetime.strftime("%Y-%m-%d")
+	one_year_ago = today - datetime.timedelta(days = 365)
+	date2 = today.strftime("%Y-%m-%d")
+	date1 = one_year_ago.strftime("%Y-%m-%d")
 	cursor = mysql.cursor()
 	query = f'''select sold_price from purchases where customer_email = \'{session['username']}\'
-	and purchase_date > \'{old_date}\''''
+	and purchase_date > \'{date1}\''''
 	cursor.execute(query)
 	total_spending = 0
 	for price in cursor.fetchall():
@@ -479,10 +479,10 @@ def spending():
 
 	if request.method == "POST": # recalculate total
 		values = []
-		old_date = request.form['date1']
-		today_date = request.form['date2']
-		date1 = old_date
-		date2 = today_date
+		date1 = request.form['date1']
+		date2 = request.form['date2']
+		datetime1 = datetime.datetime.strptime(date1, "%Y-%m-%d")
+		datetime2 = datetime.datetime.strptime(date2, "%Y-%m-%d")
 		bar_labels = labels
 		query = f''' select sold_price from purchases where customer_email = \'{session['username']}\'
 		and purchase_date > \'{date1}\' and purchase_date < \'{date2}\''''
@@ -492,49 +492,35 @@ def spending():
 			total_spending += price['sold_price']
 
 		# now get monthly spendings in this new range
-		date1 = date1.split("-")
-		year1, month1, day1 = date1
-		date2 = date2.split("-")
-		year2, month2, day2 = date2
-		if int(month1) < int(month2) and year1 == year2: # easy case
-			for x in range(int(month1), int(month2) + 1):
-				query = f'''select sold_price from purchases where customer_email = \'{session['username']}\'
-				and month(purchase_date) = {x} and year(purchase_date) = {year1}'''
-				cursor.execute(query)
-				monthly_spending = 0
-				for price in cursor.fetchall():
-					monthly_spending += price['sold_price']
-				values.append(monthly_spending)
-			bar_labels = bar_labels[int(month1) - 1:int(month2)]
-		elif int(month1) == int(month2) and year1 == year2: # still easy case
+		month_diff = 0
+		if datetime1.year == datetime2.year:
+			bar_labels = labels[datetime1.month - 1:datetime2.month]
+			month_diff = datetime2.month - datetime1.month
+		else:
+			month_diff = (12 - datetime1.month) + datetime2.month
+			labels1 = labels[datetime1.month - 1:]
+			labels2 = labels[:datetime2.month]
+			year_diff = (int(datetime2.strftime("%Y")) - int(datetime1.strftime("%Y")))
+			for i in range(1, year_diff):
+				month_diff += 12
+				labels1 += labels
+			bar_labels = labels1 + labels2
+		loop_date = datetime2
+		for i in range(month_diff + 1):
+			month_num = loop_date.strftime("%m")
+			year_num = loop_date.strftime("%Y")
 			query = f'''select sold_price from purchases where customer_email = \'{session['username']}\'
-			and month(purchase_date) = {month1} and year(purchase_date) = {year1}'''
+			and month(purchase_date) = {month_num} and year(purchase_date) = {year_num} and
+			purchase_date <= \'{datetime2.strftime("%Y-%m-%d")}\' and purchase_date >= \'{datetime1.strftime("%Y-%m-%d")}\''''
+			print(query)
 			cursor.execute(query)
-			monthly_spending = 0
-			for price in cursor.fetchall():
-				monthly_spending += price['sold_price']
-			values.append(monthly_spending)
-			bar_labels = [bar_labels[int(month1) - 1]] # just one month
-		elif int(month1) > int(month2) and int(year1) == int(year2) - 1: # slightly harder case
-			for x in range(int(month1), 13): # payments from last year
-				query = f'''select sold_price from purchases where customer_email = \'{session['username']}\'
-				and month(purchase_date) = {x} and year(purchase_date) = {year1}'''
-				cursor.execute(query)
-				monthly_spending = 0
-				for price in cursor.fetchall():
-					monthly_spending += price['sold_price']
-				values.append(monthly_spending)
-			for x in range(1, int(month2) + 1): # payments from this year
-				query = f'''select sold_price from purchases where customer_email = \'{session['username']}\'
-				and month(purchase_date) = {x} and year(purchase_date) = {year2}'''
-				cursor.execute(query)
-				monthly_spending = 0
-				for price in cursor.fetchall():
-					monthly_spending += price['sold_price']
-				values.append(monthly_spending)
-			bar_labels = bar_labels[int(month1) - 1:] + bar_labels[:int(month2)]
+			monthly_sum = 0
+			for item in cursor.fetchall():
+				monthly_sum += item.get("sold_price")
+			values.insert(0, monthly_sum)
+			loop_date = monthdelta(loop_date, -1)
 	cursor.close()
-	return render_template("spending.html", total = total_spending, max = 25000, labels=bar_labels, values=values, old=old_date, today=today_date)
+	return render_template("spending.html", total = total_spending, max = 25000, labels=bar_labels, values=values, old=date1, today=date2)
 
 @app.route("/agent")
 @agent_login_required
@@ -851,7 +837,8 @@ def reports():
 		FROM ticket NATURAL JOIN purchases
 		WHERE ticket.airline_name = \'{session['airline_name']}\' 
 		and extract(month from purchases.purchase_date) = {month_num} 
-		AND extract(year from purchases.purchase_date) = {year_num}'''
+		AND extract(year from purchases.purchase_date) = {year_num}
+		and purchase_date <= \'{date2}\' and purchase_date >= \'{date1}\''''
 		cursor.execute(query)
 		num_tickets_sold = cursor.fetchone()['count(ticket_id)']
 		values.insert(0, num_tickets_sold)
@@ -864,43 +851,34 @@ def reports():
 		date2 = request.form['date2']
 		datetime1 = datetime.datetime.strptime(date1, "%Y-%m-%d")
 		datetime2 = datetime.datetime.strptime(date2, "%Y-%m-%d")
+		month_diff = 0
 		if datetime1.year == datetime2.year:
 			bar_labels = labels[datetime1.month - 1:datetime2.month]
-			loop_date = datetime2	
-			while (loop_date >= datetime1):
-				month_num = loop_date.strftime("%m")
-				year_num = loop_date.strftime("%Y")
-				loop_date = monthdelta(loop_date, -1)
-				query = f'''SELECT count(ticket_id)
-				FROM ticket NATURAL JOIN purchases
-				WHERE ticket.airline_name = \'{session['airline_name']}\' 
-				and extract(month from purchases.purchase_date) = {month_num} 
-				AND extract(year from purchases.purchase_date) = {year_num}'''
-				cursor.execute(query)
-				num_tickets_sold = cursor.fetchone()['count(ticket_id)']
-				values.insert(0, num_tickets_sold)
-			total = sum(values)
-		else: # deal with wrapping
+			month_diff = datetime2.month - datetime1.month
+		else:
+			month_diff = (12 - datetime1.month) + datetime2.month
 			labels1 = labels[datetime1.month - 1:]
 			labels2 = labels[:datetime2.month]
 			year_diff = (int(datetime2.strftime("%Y")) - int(datetime1.strftime("%Y")))
 			for i in range(1, year_diff):
+				month_diff += 12
 				labels1 += labels
 			bar_labels = labels1 + labels2
-			loop_date = datetime2
-			for i in range(len(bar_labels)):
-				month_num = loop_date.strftime("%m")
-				year_num = loop_date.strftime("%Y")
-				loop_date = monthdelta(loop_date, -1)
-				query = f'''SELECT count(ticket_id)
-				FROM ticket NATURAL JOIN purchases
-				WHERE ticket.airline_name = \'{session['airline_name']}\' 
-				and extract(month from purchases.purchase_date) = {month_num} 
-				AND extract(year from purchases.purchase_date) = {year_num}'''
-				cursor.execute(query)
-				num_tickets_sold = cursor.fetchone()['count(ticket_id)']
-				values.insert(0, num_tickets_sold)
-			total = sum(values)
+		loop_date = datetime2
+		for i in range(month_diff + 1):
+			month_num = loop_date.strftime("%m")
+			year_num = loop_date.strftime("%Y")
+			loop_date = monthdelta(loop_date, -1)
+			query = f'''SELECT count(ticket_id)
+			FROM ticket NATURAL JOIN purchases
+			WHERE ticket.airline_name = \'{session['airline_name']}\' 
+			and extract(month from purchases.purchase_date) = {month_num} 
+			AND extract(year from purchases.purchase_date) = {year_num}
+			and purchase_date <= \'{datetime2}\' and purchase_date >= \'{datetime1}\''''
+			cursor.execute(query)
+			num_tickets_sold = cursor.fetchone()['count(ticket_id)']
+			values.insert(0, num_tickets_sold)
+		total = sum(values)
 	cursor.close()
 	return render_template("reports.html", old=date1, today=date2, total=total,values=values, title=title, labels=bar_labels, max=100)
 
