@@ -1,0 +1,51 @@
+{% extends "staffbase.html" %}
+{% block title %} View Top Destinations {% endblock %}
+{% block content %}
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+</style>
+<h3> Top 3 Destination Cities of the past 3 months:</h3>
+<table>
+	<tr>
+		<th>Popularity Ranking</th>
+		<th>Destination City</th>
+	</tr>
+	{% set count = namespace(value=1) %}
+	{% if month %}
+	{% for city in month %}
+	<tr>
+		<td> {{count.value}} </td>
+		<td> {{city}} </td>
+	</tr>
+	{% set count.value = count.value + 1%}
+	{% endfor %}
+	{% endif %}
+</table>
+<h3> Top 3 Destination Cities of the past year: </h3>
+<table>
+	<tr>
+		<th>Popularity Ranking</th>
+		<th>Destination City</th>
+	</tr>
+	{% set count = namespace(value=1) %}
+	{% if year %}
+	{% for city in year %}
+	<tr>
+		<td> {{count.value}} </td>
+		<td> {{city}} </td>
+	</tr>
+	{% set count.value = count.value + 1%}
+	{% endfor %}
+	{% endif %}
+</table>
+{% endblock %}
