@@ -755,6 +755,63 @@ def changestatus():
 		cursor.close()
 	return render_template("changestatus.html")
 
+@app.route("/revenue")
+@staff_login_required
+def revenue():
+	title = "View Revenue Comparison"
+	pie_labels = ["Direct Sales", "Indirect Sales"]
+	colors = ['#0762F5', '#F5AE07']
+	# first value is direct sales, second is indirect sales.
+	month_values = []
+	year_values = []
+	airline_name = session['airline_name']
+	cursor = mysql.cursor()
+	# get previous purchases
+	today = datetime.datetime.now()
+	one_month_ago = today - datetime.timedelta(days = 30)
+	one_year_ago = today - datetime.timedelta(days = 365)
+	# last month, direct revenue:
+	query = f'''SELECT sum(sold_price)
+	FROM ticket NATURAL JOIN purchases
+	WHERE ticket.airline_name = \'{airline_name}\' AND 
+	purchases.booking_agent_id is null 
+	and purchases.purchase_date >= \'{one_month_ago.strftime("%Y-%m-%d")}\''''
+	cursor.execute(query)
+	month_direct = cursor.fetchone()['sum(sold_price)']
+	if (month_direct):
+		month_values.append(int(month_direct))
+	# last month, indirect revenue:
+	query = f'''SELECT sum(sold_price)
+	FROM ticket NATURAL JOIN purchases
+	WHERE ticket.airline_name = \'{airline_name}\'  AND 
+	purchases.booking_agent_id is not null 
+	and purchases.purchase_date >= \'{one_month_ago.strftime("%Y-%m-%d")}\''''
+	cursor.execute(query)
+	month_indirect = cursor.fetchone()['sum(sold_price)']
+	if (month_indirect):
+		month_values.append(int(month_indirect))
+	# last year, direct revenue:
+	query = f'''SELECT sum(sold_price)
+	FROM ticket NATURAL JOIN purchases
+	WHERE ticket.airline_name = \'{airline_name}\'  AND 
+	purchases.booking_agent_id is null 
+	and purchases.purchase_date >= \'{one_year_ago.strftime("%Y-%m-%d")}\''''
+	cursor.execute(query)
+	year_direct = cursor.fetchone()['sum(sold_price)']
+	if (year_direct):
+		month_values.append(int(year_direct))
+	# last year, indirect revenue:
+	query = f'''SELECT sum(sold_price)
+	FROM ticket NATURAL JOIN purchases
+	WHERE ticket.airline_name = \'{airline_name}\'  AND 
+	purchases.booking_agent_id is not null 
+	and purchases.purchase_date >= \'{one_year_ago.strftime("%Y-%m-%d")}\''''
+	cursor.execute(query)
+	year_indirect = cursor.fetchone()['sum(sold_price)']
+	if (year_indirect):
+		month_values.append(int(year_indirect))
+	return render_template("revenue.html", title=title, max=25000, m_val = month_values, y_val = year_values, labels = pie_labels, colors = colors)
+
 @app.route("/destinations")
 @staff_login_required
 def destinations():
