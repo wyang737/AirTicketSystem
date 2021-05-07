@@ -342,7 +342,7 @@ def customerflights():
 	return render_template("customerflights.html", info=info)
 
 
-app.route("/customerpurchase/<flight_info>", methods=["POST", "GET"])
+@app.route("/customerpurchase/<flight_info>", methods=["POST", "GET"])
 @customer_login_required
 def customerpurchase(flight_info):
 	cursor = mysql.cursor()
@@ -393,6 +393,7 @@ def customerpurchase(flight_info):
 	cursor.close()
 	return render_template("customerpurchase.html", name=airline_name,\
 	 number=flight_number, price=base_price, error=error, date = depDate, time = depTime)
+
 
 # rating and commenting
 @app.route("/rate", methods=["GET", "POST"])
@@ -455,7 +456,6 @@ def spending():
 			for price in cursor.fetchall():
 				monthly_spending += price['sold_price']
 			values.append(monthly_spending)
-
 	else: # have to deal with wrapping around of months...
 		extras = bar_labels[12 - (6 - current_month):] # get end of last year
 		bar_labels = extras + bar_labels[:current_month]
