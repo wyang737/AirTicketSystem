@@ -117,7 +117,9 @@ def publicsearch():
 			queryDep = "SELECT * FROM `flight` WHERE airline_name = \"" + request.form['airlineName'] + \
 					   "\" AND flight_number = \"" + request.form['flightNumber'] + "\"AND departure_date = \"" + \
 					   request.form['depDate'] + "\"" + "AND arrival_date = \"" + request.form['arrDate'] + "\""
+		cursor.close()
 		return redirect(url_for("results", queryDep=queryDep, queryRet=queryRet))
+	cursor.close()
 	if not "username" in session:
 		return render_template("publicsearch.html")
 	elif session['userType'] == "customer":
@@ -151,6 +153,7 @@ def results(queryDep, queryRet=""):
 		return render_template("agentresults.html", info=info, info1=info1)
 	elif userType == "staff":
 		return render_template("staffresults.html", info=info, info1=info1)
+	cursor.close()
 	return render_template("results.html", info=info, info1=info1)
 
 # login page
@@ -170,6 +173,7 @@ def login():
 		if cursor.execute(customerQuery):  # successful customer login
 			session["username"] = request.form['username']
 			session["userType"] = "customer"
+			cursor.close()
 			return redirect(url_for('customer'))
 		elif cursor.execute(staffQuery):  # successful staff login
 			session["username"] = request.form['username']
@@ -180,7 +184,7 @@ def login():
 			cursor.execute(query)
 			airline_name = cursor.fetchone()['airline_name']
 			session['airline_name'] = airline_name
-			print (session['airline_name'])
+			cursor.close()
 			return redirect(url_for('staff'))
 		elif cursor.execute(agentQuery):  # successful agent login
 			session["username"] = request.form['username']
@@ -190,9 +194,11 @@ def login():
 			cursor.execute(idQuery)
 			agentID = cursor.fetchone()['booking_agent_id']
 			session["agentID"] = str(agentID)
+			cursor.close()
 			return redirect(url_for('agent'))
 		else:  # failed login
 			error = "Invalid username/password, please try again."
+	cursor.close()
 	return render_template("login.html", error=error)
 
 
@@ -236,6 +242,7 @@ def registercustomer():
 		\'{request.form['city']}\', \'{request.form['state']}\', {request.form['phoneNumber']}, {request.form['passportNumber']},
 		\'{request.form['expDate']}\', \'{request.form['passportCountry']}\', \'{request.form['dateOfBirth']}\')'''
 		if cursor.execute(query):  # successful registration
+			cursor.close()
 			return redirect(url_for('login'))
 	return render_template("registercustomer.html", error=error)
 
@@ -265,6 +272,7 @@ def registeragent():
 		query = f'''INSERT INTO BookingAgent VALUES (\'{request.form['email']}\', 
 		\'{hex_hashed}\', {agentID}, 0)'''
 		if cursor.execute(query):  # successful registration
+			cursor.close()
 			return redirect(url_for('login'))
 	return render_template("registeragent.html", error=error)
 
@@ -291,6 +299,7 @@ def registerstaff():
 		\'{request.form['name']}\', \'{request.form['dateOfBirth']}\', \'{numbers[0]}\', 
 		\'{request.form['airlineName']}\')'''
 		if cursor.execute(query):  # successful registration
+			cursor.close()
 			return redirect(url_for('login'))
 	return render_template("registerstaff.html", error=error)
 
@@ -302,6 +311,7 @@ def customer():
 	query = "Select name from customer where customer_email = \"" + session['username'] + "\""
 	cursor.execute(query)
 	name = cursor.fetchone()['name']
+	cursor.close()
 	return render_template("customer.html", name=name)
 
 
@@ -312,13 +322,11 @@ def customerflights():
 	query = "Select ticket_id from purchases where customer_email = \"" + session['username'] + "\""
 	cursor.execute(query)
 	ticket_ids = cursor.fetchall()
-	print(ticket_ids)
 	query = "Select flight_number from ticket where ticket_id = "
 	for item in ticket_ids:
 		query += str(item.get('ticket_id'))
 		query += " or ticket_id = "
 	query += " -1 "
-	print(query)
 	cursor.execute(query)
 	flight_numbers = cursor.fetchall()
 	query = "Select * from flight where (CURRENT_DATE < flight.departure_date OR (CURRENT_DATE = flight.departure_date " \
@@ -330,6 +338,7 @@ def customerflights():
 	cursor.execute(query)
 	info = cursor.fetchall()
 	# info should be a list of lists, where each inner list is a flight.
+	cursor.close()
 	return render_template("customerflights.html", info=info)
 
 
@@ -381,6 +390,7 @@ def customerpurchase(flight_info):
 		{flight_number})'''
 		cursor.execute(query)
 		error = "Succesful Purchase!"
+	cursor.close()
 	return render_template("customerpurchase.html", name=airline_name,\
 	 number=flight_number, price=base_price, error=error, date = depDate, time = depTime)
 
@@ -389,24 +399,33 @@ def customerpurchase(flight_info):
 @app.route("/rate", methods=["GET", "POST"])
 @customer_login_required
 def rate():
+	cursor = mysql.cursor()
 	error = None
-	info = []
-	flight_info = ['China Eastern', 'Delayed', 123456789, 'JFK', '2021-03-30', '12:30:12', 'PVG', '2021-03-31',
-				   '08:30:59', 500, 1234567890, 0]
-	info.append(flight_info)
-	flight_info = ['United', 'On Time', 445566778, 'JFK', '2021-03-30', '11:33:22', 'PVG', '2021-03-31', '12:55:11',
-				   345, 98989898, 1]
-	info.append(flight_info)
+	query = "Select ticket_id from purchases where customer_email = \"" + session['username'] + "\""
+	cursor.execute(query)
+	ticket_ids = cursor.fetchall()
+	query = "Select flight_number from ticket where ticket_id = "
+	for item in ticket_ids:
+		query += str(item.get('ticket_id'))
+		query += " or ticket_id = "
+	query += " -1 "
+	cursor.execute(query)
+	flight_numbers = cursor.fetchall()
+	query = "Select * from flight where (flight_number = "
+	for item in flight_numbers:
+		query += str(item.get('flight_number'))
+		query += " or flight_number = "
+	query += " -1) "
+	cursor.execute(query)
+	info = cursor.fetchall()
 	if request.method == "POST":
 		form = request.form.to_dict()
-		print(form)
 		comment = form['comment']
 		rating = form['rating']
 		flightNumber = list(form)[2]
 		customer_email = session['username']
 
 		# first need to check if the customer already rated this flight
-		cursor = mysql.cursor()
 		query = f'''select customer_email, flight_number from rates where 
 		customer_email = \'{customer_email}\' and flight_number = {flightNumber}'''
 		if cursor.execute(query):
@@ -415,7 +434,8 @@ def rate():
 			query = f'''insert into rates values(\"{customer_email}\", {flightNumber}, \"{comment}\", {rating})'''
 			cursor.execute(query)
 			error = "Rate & Comment were Succesful!"
-			return redirect(url_for('rate'))
+			cursor.close()
+	cursor.close()
 	return render_template("rate.html", info=info, error=error)
 
 # track my spending
@@ -454,7 +474,6 @@ def spending():
 	else: # have to deal with wrapping around of months...
 		extras = bar_labels[12 - (6 - current_month):] # get end of last year
 		bar_labels = extras + bar_labels[:current_month]
-		print (bar_labels)
 		extra = 6 - current_month
 		for x in range((13 - extra), 13): # last year's months
 			query = f'''select sold_price from purchases where customer_email = \'{session['username']}\'
@@ -463,7 +482,6 @@ def spending():
 			monthly_spending = 0
 			for price in cursor.fetchall():
 				monthly_spending += price['sold_price']
-			print (str(x) + ": " + str(monthly_spending))
 			values.append(monthly_spending)
 		for x in range(1, current_month + 1): # this year's months
 			query = f'''select sold_price from purchases where customer_email = \'{session['username']}\'
@@ -472,7 +490,6 @@ def spending():
 			monthly_spending = 0
 			for price in cursor.fetchall():
 				monthly_spending += price['sold_price']
-			print (str(x) + ": " + str(monthly_spending))
 			values.append(monthly_spending)
 
 	if request.method == "POST": # recalculate total
@@ -531,6 +548,7 @@ def spending():
 					monthly_spending += price['sold_price']
 				values.append(monthly_spending)
 			bar_labels = bar_labels[int(month1) - 1:] + bar_labels[:int(month2)]
+	cursor.close()
 	return render_template("spending.html", total = total_spending, max = 25000, labels=bar_labels, values=values, old=old_date, today=today_date)
 
 @app.route("/agent")
@@ -597,6 +615,7 @@ def agentpurchase(flight_info):
 		{flight_number})'''
 		cursor.execute(query)
 		error = "Succesful Purchase!"
+	cursor.close()
 	return render_template("agentpurchase.html", name=airline_name,\
 	 number=flight_number, price=base_price, error=error, date = depDate, time=depTime)
 
@@ -610,13 +629,11 @@ def agentflights():
 	query = "Select ticket_id from purchases where booking_agent_id = " + str(bookingID[0].get('booking_agent_id'))
 	cursor.execute(query)
 	ticket_ids = cursor.fetchall()
-	print(ticket_ids)
 	query = "Select flight_number from ticket where ticket_id = "
 	for item in ticket_ids:
 		query += str(item.get('ticket_id'))
 		query += " or ticket_id = "
 	query += " -1 "
-	print(query)
 	cursor.execute(query)
 	flight_numbers = cursor.fetchall()
 	query = "Select * from flight where (CURRENT_DATE < flight.departure_date OR (CURRENT_DATE = flight.departure_date " \
@@ -630,6 +647,7 @@ def agentflights():
 	info = cursor.fetchall()
 
 	# info should be a list of lists, where each inner list is a flight.
+	cursor.close()
 	return render_template("agentflights.html", info=info)
 
 @app.route("/agentcommission", methods=["POST", "GET"])
@@ -651,19 +669,16 @@ def agentcommission():
                          "purchase_date < \'" + request.form['endDate']
         query += "\')) and booking_agent_id =" + bookingID
         cursor.execute(query)
-        print(query)
         commission = cursor.fetchall()[0].get("sum(`sold_price`)/10")
         query = "SELECT COUNT(*) from purchases WHERE ((purchase_date > \'" + request.form['begDate'] + "\') and (" \
                                                                                                         "purchase_date < \'" + \
                 request.form['endDate']
         query += "\')) and booking_agent_id =" + bookingID
-        print(query)
         cursor.execute(query)
         tickets = cursor.fetchall()[0].get("COUNT(*)")
-        print(commission)
-        print(tickets)
+        cursor.close()
         return render_template("agentcommissionresults.html", commission=commission, tickets=tickets)
-    print("commission: " + str(commission))
+    cursor.close()
     return render_template("agentcommission.html", commission=commission, tickets=tickets)
 
 @app.route("/topcustomers")
@@ -685,16 +700,13 @@ def topcustomers():
 	topcustcomm = []
 	label2 = []
 	topcommissions = cursor.fetchall()
-	print(toptickets)
-	print(topcommissions)
 	for item in toptickets:
 		label.append(item["customer_email"])
 		topcusttick.append(item["count(*)"])
 	for item in topcommissions:
 		label2.append(item["customer_email"])
 		topcustcomm.append(item['sum(sold_price)/10'])
-	print(topcusttick)
-	print(label)
+	cursor.close()
 	return render_template("topcustomers.html", labels=label, topcusttick=topcusttick, labels2=label2,
 						   topcustcomm=topcustcomm, max=20, max2=500)
 
@@ -706,8 +718,8 @@ def staff():
 	query = "Select name from staff where username = \"" + session['username'] + "\""
 	cursor.execute(query)
 	name = cursor.fetchone()['name']
+	cursor.close()
 	return render_template("staff.html", name=name)
-
 
 @app.route("/staffflights")
 @staff_login_required
@@ -731,7 +743,6 @@ def staffflights():
 	query += " -1 "
 	cursor.execute(query)
 	info = cursor.fetchall()
-	print(flightNumbers)
 	for num in flightNumbers:
 		num = num.get("flight_number")
 		query = f'''SELECT customer.name
@@ -745,6 +756,7 @@ def staffflights():
 			name_list.append(name)
 		customers.append(name_list)
 	# info should be a list of lists, where each inner list is a flight.
+	cursor.close()
 	return render_template("staffflights.html", info=info, customers=customers)
 
 @app.route("/addstuff", methods=["GET", "POST"])
@@ -822,6 +834,7 @@ def frequent():
 		cursor.execute(query)
 		flight_list = cursor.fetchall()
 		flights.append(flight_list)
+	cursor.close()
 	return render_template("frequent.html", info=info, flights=flights)
 
 def monthdelta(date, delta):
@@ -880,7 +893,6 @@ def reports():
 				AND extract(year from purchases.purchase_date) = {year_num}'''
 				cursor.execute(query)
 				num_tickets_sold = cursor.fetchone()['count(ticket_id)']
-				print (num_tickets_sold)
 				values.insert(0, num_tickets_sold)
 			total = sum(values)
 		else: # deal with wrapping
@@ -890,8 +902,6 @@ def reports():
 			for i in range(1, year_diff):
 				labels1 += labels
 			bar_labels = labels1 + labels2
-			print (labels2)
-			print (bar_labels)
 			loop_date = datetime2
 			for i in range(len(bar_labels)):
 				month_num = loop_date.strftime("%m")
@@ -906,8 +916,8 @@ def reports():
 				num_tickets_sold = cursor.fetchone()['count(ticket_id)']
 				values.insert(0, num_tickets_sold)
 			total = sum(values)
+	cursor.close()
 	return render_template("reports.html", old=date1, today=date2, total=total,values=values, title=title, labels=bar_labels, max=100)
-
 
 @app.route("/revenue")
 @staff_login_required
@@ -972,6 +982,7 @@ def revenue():
 		year_values.append(int(year_indirect))
 	else:
 		year_values.append(0)
+	cursor.close()
 	return render_template("revenue.html", title=title, max=25000, m_val = month_values, y_val = year_values, labels = pie_labels, colors = colors)
 
 @app.route("/destinations")
@@ -1050,6 +1061,7 @@ def destinations():
 		dictionary[year_cities[i]] = tickets_purchased[i];
 	dict(sorted(dictionary.items(), key=lambda item: item[1]))
 	year_cities = dictionary.keys()
+	cursor.close()
 	return render_template("destinations.html", month = months_cities, year = year_cities)
 
 @app.route("/ratings", methods=["POST", "GET"])
@@ -1069,7 +1081,9 @@ def ratings():
 		query = "SELECT customer_email, comment, rating FROM `rates` WHERE flight_number =" + flight_number
 		cursor.execute(query)
 		info = cursor.fetchall()
+		cursor.close()
 		return render_template("ratingresults.html", average=average, info=info)
+	cursor.close()
 	return render_template("ratings.html", info=info)
 
 @app.route("/topbookingagents")
@@ -1083,8 +1097,7 @@ def topbookingagents():
 	topbytickmonth = cursor.fetchall()
 	query = "SELECT booking_agent_id, count(*) from purchases natural join ticket " \
 			"where booking_agent_id IS NOT NULL and (purchase_date > ADDDATE(CURRENT_DATE, INTERVAL -1 YEAR)) and " \
-			"ticket.airline_name = \"" + session[
-				"airline_name"] + "\" group by booking_agent_id order by count(*) desc limit 5"
+			"ticket.airline_name = \"" + session["airline_name"] + "\" group by booking_agent_id order by count(*) desc limit 5"
 	cursor.execute(query)
 	topbytickyear = cursor.fetchall()
 	query = "SELECT booking_agent_id, sum(sold_price)/10 from purchases natural join ticket " \
@@ -1092,6 +1105,9 @@ def topbookingagents():
 			"ticket.airline_name = \"" + session["airline_name"] + "\" group by booking_agent_id order by sum(sold_price)/10 desc limit 5"
 	cursor.execute(query)
 	topbycomm = cursor.fetchall()
+	cursor.close()
 	return render_template("topbookingagents.html", topbytickmonth=topbytickmonth, topbytickyear=topbytickyear, topbycomm=topbycomm)
+
+
 if __name__ == "__main__":
 	app.run(host='localhost', port=5000, debug=True)
