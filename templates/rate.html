@@ -31,24 +31,24 @@ td, th {
     <th>Rate the Flight</th>
     <th>Comments</th>
   </tr>
+  <form action="" method="POST">
   {% if info %}
-  {% for flight in info %}
-  <form action = "" method = "post">
-  	<tr>
-  		<td> {{flight[0]}} </td>
-  		<td> {{flight[1]}} </td>
-  		<td> {{flight[2]}} </td>
-  		<td> {{flight[3]}} </td>
-  		<td> {{flight[4]}} </td>
-  		<td> {{flight[5]}} </td>
-  		<td> {{flight[6]}} </td>
-  		<td> {{flight[7]}} </td>
-  		<td> {{flight[8]}} </td>
-  		<td> {{flight[9]}} </td>
-  		<td> {{flight[10]}} </td>
+  {% for item in info %}
+    <tr>
+      <td> {{item.airline_name}} </td>
+        <td>    {{item.status}} </td>
+        <td>    {{item.flight_number}} </td>
+        <td>    {{item.departure_airport}}</td>
+        <td>    {{item.departure_date}}</td>
+        <td>    {{item.departure_time}}</td>
+        <td>    {{item.arrival_airport}}</td>
+        <td>    {{item.arrival_date}}</td>
+        <td>    {{item.arrival_time}}</td>
+        <td>    {{item.base_price}}</td>
+        <td>    {{item.airplane_id}} </td>
       <td> <input type="text" name="comment" required/></td>
       <td> <input type="number" name="rating" min="1" max="100"required></td>
-      <td> <input type="submit" name="{{flight[2]}}" value="Comment"/></td>
+      <td> <input type="submit" name="{{item.flight_number}}" value="Submit"/></td>
   	</tr>
   </form>
   {% endfor %}
