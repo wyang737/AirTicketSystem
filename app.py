@@ -788,6 +788,42 @@ def changestatus():
 		cursor.close()
 	return render_template("changestatus.html")
 
+@app.route("/frequent")
+@staff_login_required
+def frequent():
+	cursor = mysql.cursor()
+	info = []
+	flights = []
+	dictionary = {}
+	flights = []
+	# from one year ago - now
+	date = datetime.datetime.now() - datetime.timedelta(days = 365)
+	query = f'''SELECT customer_email, count(ticket_id)
+	FROM purchases NATURAL JOIN ticket
+	WHERE airline_name = \'{session['airline_name']}\'
+	AND purchase_date >= \'{date.strftime("%Y-%m-%d")}\'
+    group by customer_email
+	order by count(ticket_id) desc limit 5'''
+	cursor.execute(query)
+	for elem in cursor.fetchall():
+		dictionary[elem.get("customer_email")] = elem.get('count(ticket_id)')
+	for customer_email in dictionary.keys():
+		query = f'''select * from customer where customer_email = \'{customer_email}\''''
+		cursor.execute(query)
+		result = cursor.fetchall()
+		info.append(result)
+	# now get data on flights
+	for item in info:
+		email = item[0].get('customer_email')
+		query = f'''select flight_number 
+		from ticket natural join purchases
+		where airline_name = \'{session['airline_name']}\'
+		and customer_email = \'{email}\''''
+		cursor.execute(query)
+		flight_list = cursor.fetchall()
+		flights.append(flight_list)
+	return render_template("frequent.html", info=info, flights=flights)
+
 def monthdelta(date, delta):
     m, y = (date.month+delta) % 12, date.year + ((date.month)+delta-1) // 12
     if not m: m = 12
