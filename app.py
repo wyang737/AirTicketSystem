@@ -400,7 +400,8 @@ def customerpurchase(flight_info):
 def rate():
 	cursor = mysql.cursor()
 	error = None
-	query = "Select ticket_id from purchases where customer_email = \"" + session['username'] + "\""
+	query = f'''select ticket_id from purchases where customer_email = \'{session['username']}\'
+	and purchase_date < CURRENT_DATE()'''
 	cursor.execute(query)
 	ticket_ids = cursor.fetchall()
 	query = "Select flight_number from ticket where ticket_id = "
