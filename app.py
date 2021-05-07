@@ -512,7 +512,6 @@ def spending():
 			query = f'''select sold_price from purchases where customer_email = \'{session['username']}\'
 			and month(purchase_date) = {month_num} and year(purchase_date) = {year_num} and
 			purchase_date <= \'{datetime2.strftime("%Y-%m-%d")}\' and purchase_date >= \'{datetime1.strftime("%Y-%m-%d")}\''''
-			print(query)
 			cursor.execute(query)
 			monthly_sum = 0
 			for item in cursor.fetchall():
