@@ -788,6 +788,91 @@ def changestatus():
 		cursor.close()
 	return render_template("changestatus.html")
 
+def monthdelta(date, delta):
+    m, y = (date.month+delta) % 12, date.year + ((date.month)+delta-1) // 12
+    if not m: m = 12
+    d = min(date.day, [31,
+        29 if y%4==0 and (not y%100==0 or y%400 == 0) else 28,
+        31,30,31,30,31,31,30,31,30,31][m-1])
+    return date.replace(day=d,month=m, year=y)
+
+@app.route("/reports", methods=["POST", "GET"])
+@staff_login_required
+def reports():
+	values = []
+	title = "Number of Tickets Sold"
+	total = 0
+	# default will show last year?
+	date2 = datetime.datetime.now()
+	date1 = date2 - datetime.timedelta(days = 365)
+	bar_labels = labels[date2.month - 1:] + labels[:date2.month]
+	# get monthly number of ticket sales
+	cursor = mysql.cursor()
+	loop_date = date2
+	for i in range(13):
+		month_num = loop_date.strftime("%m")
+		year_num = loop_date.strftime("%Y")
+		loop_date = monthdelta(loop_date, -1)
+		query = f'''SELECT count(ticket_id)
+		FROM ticket NATURAL JOIN purchases
+		WHERE ticket.airline_name = \'{session['airline_name']}\' 
+		and extract(month from purchases.purchase_date) = {month_num} 
+		AND extract(year from purchases.purchase_date) = {year_num}'''
+		cursor.execute(query)
+		num_tickets_sold = cursor.fetchone()['count(ticket_id)']
+		values.insert(0, num_tickets_sold)
+	total = sum(values)
+	date1 = date1.strftime("%Y-%m-%d")
+	date2 = date2.strftime("%Y-%m-%d")
+	if request.method == "POST": # need to recalculate...
+		values = []
+		date1 = request.form['date1']
+		date2 = request.form['date2']
+		datetime1 = datetime.datetime.strptime(date1, "%Y-%m-%d")
+		datetime2 = datetime.datetime.strptime(date2, "%Y-%m-%d")
+		if datetime1.year == datetime2.year:
+			bar_labels = labels[datetime1.month - 1:datetime2.month]
+			loop_date = datetime2	
+			while (loop_date >= datetime1):
+				month_num = loop_date.strftime("%m")
+				year_num = loop_date.strftime("%Y")
+				loop_date = monthdelta(loop_date, -1)
+				query = f'''SELECT count(ticket_id)
+				FROM ticket NATURAL JOIN purchases
+				WHERE ticket.airline_name = \'{session['airline_name']}\' 
+				and extract(month from purchases.purchase_date) = {month_num} 
+				AND extract(year from purchases.purchase_date) = {year_num}'''
+				cursor.execute(query)
+				num_tickets_sold = cursor.fetchone()['count(ticket_id)']
+				print (num_tickets_sold)
+				values.insert(0, num_tickets_sold)
+			total = sum(values)
+		else: # deal with wrapping
+			labels1 = labels[datetime1.month - 1:]
+			labels2 = labels[:datetime2.month]
+			year_diff = (int(datetime2.strftime("%Y")) - int(datetime1.strftime("%Y")))
+			for i in range(1, year_diff):
+				labels1 += labels
+			bar_labels = labels1 + labels2
+			print (labels2)
+			print (bar_labels)
+			loop_date = datetime2
+			for i in range(len(bar_labels)):
+				month_num = loop_date.strftime("%m")
+				year_num = loop_date.strftime("%Y")
+				loop_date = monthdelta(loop_date, -1)
+				query = f'''SELECT count(ticket_id)
+				FROM ticket NATURAL JOIN purchases
+				WHERE ticket.airline_name = \'{session['airline_name']}\' 
+				and extract(month from purchases.purchase_date) = {month_num} 
+				AND extract(year from purchases.purchase_date) = {year_num}'''
+				cursor.execute(query)
+				num_tickets_sold = cursor.fetchone()['count(ticket_id)']
+				values.insert(0, num_tickets_sold)
+			total = sum(values)
+	return render_template("reports.html", old=date1, today=date2, total=total,values=values, title=title, labels=bar_labels, max=100)
+
+
 @app.route("/revenue")
 @staff_login_required
 def revenue():
