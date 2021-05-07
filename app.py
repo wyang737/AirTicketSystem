@@ -1072,5 +1072,26 @@ def ratings():
 		return render_template("ratingresults.html", average=average, info=info)
 	return render_template("ratings.html", info=info)
 
+@app.route("/topbookingagents")
+@staff_login_required
+def topbookingagents():
+	cursor = mysql.cursor()
+	query = "SELECT booking_agent_id, count(*) from purchases natural join ticket " \
+			"where booking_agent_id IS NOT NULL and (purchase_date > ADDDATE(CURRENT_DATE, INTERVAL -1 MONTH)) and " \
+			"ticket.airline_name = \"" + session["airline_name"] + "\" group by booking_agent_id order by count(*) desc limit 5"
+	cursor.execute(query)
+	topbytickmonth = cursor.fetchall()
+	query = "SELECT booking_agent_id, count(*) from purchases natural join ticket " \
+			"where booking_agent_id IS NOT NULL and (purchase_date > ADDDATE(CURRENT_DATE, INTERVAL -1 YEAR)) and " \
+			"ticket.airline_name = \"" + session[
+				"airline_name"] + "\" group by booking_agent_id order by count(*) desc limit 5"
+	cursor.execute(query)
+	topbytickyear = cursor.fetchall()
+	query = "SELECT booking_agent_id, sum(sold_price)/10 from purchases natural join ticket " \
+			"where booking_agent_id IS NOT NULL and (purchase_date > ADDDATE(CURRENT_DATE, INTERVAL -1 YEAR)) and " \
+			"ticket.airline_name = \"" + session["airline_name"] + "\" group by booking_agent_id order by sum(sold_price)/10 desc limit 5"
+	cursor.execute(query)
+	topbycomm = cursor.fetchall()
+	return render_template("topbookingagents.html", topbytickmonth=topbytickmonth, topbytickyear=topbytickyear, topbycomm=topbycomm)
 if __name__ == "__main__":
 	app.run(host='localhost', port=5000, debug=True)

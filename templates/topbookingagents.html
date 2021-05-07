@@ -1,0 +1,73 @@
+{% extends "staffbase.html" %}
+{% block title %} agent {% endblock %}
+{% block content %}
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+</style>
+
+	{% if topbytickmonth %}
+	<h1>Top Booking Agents(Past Month) By Ticket</h1>
+    {% else %}
+    <h1>No Booking Agents(Past Month)</h1>
+    {% endif %}
+	<table>
+  <tr>
+    <th>Booking Agent ID</th>
+      <th>Tickets Sold</th></tr>
+  {% if topbytickmonth %}
+  {% for item in topbytickmonth %}
+    <tr>
+      <td> {{item.booking_agent_id}} </td>
+        <td> {{item["count(*)"]}} </td>
+        </tr>
+  {% endfor %}
+  {% endif %}
+    </table>
+{% if topbytickyear %}
+	<h1>Top Booking Agents(Past Year) By Ticket</h1>
+    {% else %}
+    <h1>No Booking Agents(Past Year)</h1>
+    {% endif %}
+	<table>
+  <tr>
+    <th>Booking Agent ID</th>
+      <th>Tickets Sold</th></tr>
+  {% if topbytickyear %}
+  {% for item in topbytickyear %}
+    <tr>
+      <td> {{item.booking_agent_id}} </td>
+        <td> {{item["count(*)"]}} </td>
+        </tr>
+  {% endfor %}
+  {% endif %}
+    </table>
+{% if topbycomm %}
+	<h1>Top Booking Agents(Past Year) By Commission</h1>
+    {% else %}
+    <h1>No Booking Agents(Past Year)</h1>
+    {% endif %}
+	<table>
+  <tr>
+    <th>Booking Agent ID</th>
+      <th>Commissions</th></tr>
+  {% if topbycomm %}
+  {% for item in topbycomm %}
+    <tr>
+      <td> {{item.booking_agent_id}} </td>
+        <td>    {{item["sum(sold_price)/10"]}} </td>
+        </tr>
+  {% endfor %}
+  {% endif %}
+    </table>
+
+{% endblock %}
