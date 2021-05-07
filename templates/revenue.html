@@ -9,7 +9,7 @@
   <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js'></script>
 </head>
 <body>
-	{% if m_val|length < 2 %}
+	{% if (m_val[0] == 0) and (m_val[1] == 0) %}
 	<h3> Revenue from Last Month: 0 </h3>
 	{% else %}
     <h3> Revenue from Last Month:</h3>
@@ -36,7 +36,7 @@
     </script>
     {% endif %}
     <div>
-    {% if y_val|length < 2 %}
+    {% if (y_val[0] == 0) and (y_val[1] == 0) %}
     <h3> Revenue from Last Year: 0 </h3>
     {% else %}
     <h3> Revenue from Last Year:</h3>
