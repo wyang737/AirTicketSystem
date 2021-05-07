@@ -342,7 +342,7 @@ def customerflights():
 	return render_template("customerflights.html", info=info)
 
 
-@app.route("/customerpurchase/<flight_info>", methods=["POST", "GET"])
+app.route("/customerpurchase/<flight_info>", methods=["POST", "GET"])
 @customer_login_required
 def customerpurchase(flight_info):
 	cursor = mysql.cursor()
@@ -381,7 +381,7 @@ def customerpurchase(flight_info):
 	if ticket_id > 99999999:
 		ticket_id = 0 # wrap back around
 	if request.method == "POST":
-		query = f'''insert into purchases values ({ticket_id}, \'{request.form['email']}\',
+		query = f'''insert into purchases values ({ticket_id}, \'{session['username']}\',
 		null, {base_price}, {date}, {time}, \'{request.form['cardType']}\', {request.form['cardNumber']},
 		\'{request.form['cardName']}\', \'{request.form['expDate']}\')'''
 		cursor.execute(query)
@@ -393,7 +393,6 @@ def customerpurchase(flight_info):
 	cursor.close()
 	return render_template("customerpurchase.html", name=airline_name,\
 	 number=flight_number, price=base_price, error=error, date = depDate, time = depTime)
-
 
 # rating and commenting
 @app.route("/rate", methods=["GET", "POST"])
