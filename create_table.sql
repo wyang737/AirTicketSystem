@@ -60,7 +60,7 @@ CREATE TABLE Customer
 	street varchar(20),
 	city varchar(20),
 	state varchar(20),
-	phone_number numeric(10, 0),
+	phone_number numeric(11, 0),
 	passport_number numeric(9, 0),
 	passport_expiration date,
 	passport_country varchar(20),
@@ -109,7 +109,7 @@ CREATE TABLE Purchases
 CREATE TABLE StaffPhones
 (
 	username varchar(20),
-	phone_number numeric(10, 0),
+	phone_number numeric(11, 0),
 	FOREIGN KEY (username) REFERENCES Staff(username) on delete cascade
 );
 
@@ -119,7 +119,7 @@ CREATE TABLE Staff
 	password varchar(40),
 	name varchar(30),
 	date_of_birth date,
-	phone_number numeric(10, 0),
+	phone_number numeric(11, 0),
 	airline_name varchar(20),
 	PRIMARY KEY (username),
 	FOREIGN KEY (phone_number) REFERENCES StaffPhones(phone_number) on delete set null,
